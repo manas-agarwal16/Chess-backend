@@ -28,6 +28,20 @@ const Waiting = WaitingsModels(sequelize);
 const Rating = RatingModel(sequelize);
 const Audio = AudioModel(sequelize);
 
-//Defining Associations
+//Associations
+
+//player Game one to many
 Player.hasMany(Game, { foreignKey: "player1Id", as: "GameAsPlayer1" });
 Player.hasMany(Game,{foreignKey: "player2Id", as: "GamesAsPlayer2"});
+Player.hasMany(Game, {foreignKey: "winnerId" , as: "GamesWon"});
+Game.belongsTo(Player, {foreignKey: "player1Id", as: "Player1"});
+Game.belongsTo(Player , {foreignKey: "player2Id", as: "Player2"});
+Game.belongsTo(Player, {foreignKey: "winnderId", as: "Winner"});
+
+//player to waiting: one to one
+Player.hasOne(Waiting, {foreignKey: "waitingPlayerId" , as: "WaitingRecord"});
+Waiting.belongsTo(Player, {foreignKey: "waitingPlayerId", as : "WaitingPlayer"});
+
+//player to rating one to one
+Player.hasOne(Rating, {foreignKey: "playerId" , as: "PlayerRating"});
+Rating.belongsTo(Player , {foreignKey: "playerId" , as: "PlayerRecord"});

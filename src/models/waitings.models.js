@@ -15,13 +15,13 @@ export default (sequelize) => {
         key: "id",
       },
     },
-    joinedPlayerId: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: "Players",
-        key: "id",
-      },
-    },
+    // joinedPlayerId: {
+    //   type: DataTypes.INTEGER,
+    //   references: {
+    //     model: "Players",
+    //     key: "id",
+    //   },
+    // },
   });
   return Waiting;
 };
