@@ -21,11 +21,13 @@ export default (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+  },{
+    tableName: "players",
   });
   return Player;
 };
 
-// or
+// or  
 // export default (sequelize) => {
 //   class User extends Model {}
 //   User.init({});

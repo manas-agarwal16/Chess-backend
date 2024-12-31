@@ -1,4 +1,4 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, TableHints } from "sequelize";
 
 export default (sequelize) => {
   const Audio = sequelize.define("Audio", {
@@ -11,7 +11,7 @@ export default (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Games",
+        model: "games",
         key: "id",
       },
     },
@@ -19,7 +19,7 @@ export default (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Players",
+        model: "players",
         key: "id",
       },
     },
@@ -27,10 +27,12 @@ export default (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Players",
+        model: "players",
         key: "id",
       },
     },
+  }, {
+    tableName: "audios",
   });
   return Audio;
 };

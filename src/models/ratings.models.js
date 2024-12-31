@@ -16,10 +16,12 @@ export default (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Players',
+                model: 'players',
                 key: 'id',
             }
         }
+    },{
+        tableName: 'ratings',
     });
     return Rating;
 }

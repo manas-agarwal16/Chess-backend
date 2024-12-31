@@ -11,7 +11,7 @@ export default (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Players',
+                model: 'players',
                 key: 'id',
             }
         },
@@ -19,14 +19,14 @@ export default (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'Players',
+                model: 'players',
                 key: 'id',
             }
         },
         winnerId:{
             type: DataTypes.INTEGER,
             references:{
-                model: 'Players',
+                model: 'players',
                 key: 'id',
             }
         },
@@ -51,6 +51,8 @@ export default (sequelize) => {
             defaultValue: "on-going",
         },
         //player1Id , player2Id, winnerId
+    },{
+        tableName: 'games',
     });
     return Game;
 }
