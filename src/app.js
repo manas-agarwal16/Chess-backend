@@ -25,9 +25,12 @@ app.use(express.json({ limit: "10kb" })); //for incoming requests in jdon format
 app.use(express.urlencoded({ extended: true })); // for incoming requests in url
 // app.use(express.static("public"));
 
+import playerRouter from "./routes/player.routes.js";
+
+app.use('/players', playerRouter);
+
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
-
 
 export {app};

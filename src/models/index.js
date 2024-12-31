@@ -20,6 +20,7 @@ import RatingModel from "./ratings.models.js";
 import WaitingsModels from "./waitings.models.js";
 import GameModel from "./games.models.js";
 import AudioModel from "./audios.models.js";
+import OTPModel from "./otps.models.js";
 
 //Initializing Sequelize Models
 const Player = PlayerModel(sequelize);
@@ -27,16 +28,16 @@ const Game = GameModel(sequelize);
 const Waiting = WaitingsModels(sequelize);
 const Rating = RatingModel(sequelize);
 const Audio = AudioModel(sequelize);
-
+const OTP = OTPModel(sequelize);
 //Associations
 
 //player Game one to many
 Player.hasMany(Game, { foreignKey: "player1Id", as: "GameAsPlayer1" });
 Player.hasMany(Game, { foreignKey: "player2Id", as: "GamesAsPlayer2" });
 Player.hasMany(Game, { foreignKey: "winnerId", as: "GamesWon" });
-Game.belongsTo(Player, { foreignKey: "player1Id", as: "Player1"});
-Game.belongsTo(Player, { foreignKey: "player2Id", as: "Player2"});
-Game.belongsTo(Player, { foreignKey: "winnerId", as: "Winner"});
+Game.belongsTo(Player, { foreignKey: "player1Id", as: "Player1" });
+Game.belongsTo(Player, { foreignKey: "player2Id", as: "Player2" });
+Game.belongsTo(Player, { foreignKey: "winnerId", as: "Winner" });
 
 //player to waiting: one to one
 Player.hasOne(Waiting, { foreignKey: "waitingPlayerId", as: "WaitingPlayer" });
@@ -68,4 +69,4 @@ const syncDB = async () => {
   }
 };
 
-export { sequelize, Player, Game, Waiting, Rating, Audio, syncDB };
+export { sequelize, Player, Game, Waiting, Rating, Audio, OTP, syncDB };
