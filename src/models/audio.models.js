@@ -7,7 +7,7 @@ export default (sequelize) => {
       autoIncrement: true,
       type: DataTypes.INTEGER,
     },
-    game_id: {
+    gameId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {

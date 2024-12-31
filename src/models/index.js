@@ -39,9 +39,21 @@ Game.belongsTo(Player , {foreignKey: "player2Id", as: "Player2"});
 Game.belongsTo(Player, {foreignKey: "winnderId", as: "Winner"});
 
 //player to waiting: one to one
-Player.hasOne(Waiting, {foreignKey: "waitingPlayerId" , as: "WaitingRecord"});
-Waiting.belongsTo(Player, {foreignKey: "waitingPlayerId", as : "WaitingPlayer"});
+Player.hasOne(Waiting, {foreignKey: "waitingPlayerId" , as: "WaitingPlayer"});
+Waiting.belongsTo(Player, {foreignKey: "waitingPlayerId", as : "WaitingPlayerDetails"});
 
 //player to rating one to one
 Player.hasOne(Rating, {foreignKey: "playerId" , as: "PlayerRating"});
-Rating.belongsTo(Player , {foreignKey: "playerId" , as: "PlayerRecord"});
+Rating.belongsTo(Player , {foreignKey: "playerId" , as: "PlayerDetails"});
+
+//Player to Audio one to one
+Player.hasOne(Audio , {foreignKey: "player1Id" , as: "AudioAsPlayer1"});
+Player.hasOne(Audio , {foreignKey: "player2Id" , as: "AudioAsPlayer2"});
+Audio.belongsTo(Player, {foreignKey: "player1", as: "Player1Details"});
+Audio.belongsTo(Player, {foreignKey: "player2Id" , as: "Player2Details"});
+
+
+//Game to Audio one to one
+Game.hasOne(Audio , {foreignKey: "gameId" , as: "GameAudio"});
+Audio.belongsTo(Game , {foreignKey: "gameId", as: "GameDetails"});
+
