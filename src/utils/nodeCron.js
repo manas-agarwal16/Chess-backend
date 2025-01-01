@@ -1,12 +1,17 @@
 import cron from "node-cron";
-import OtpModel from "../models/otps.models";
 import { Op } from "sequelize";
+import { OTP } from "../models/index.js";
 
+//clear
 cron.schedule("* * * * *", async () => {
+  console.log("here");
+
   const now = new Date();
-  await OtpModel.destroy({
+  await OTP.destroy({
     where: {
-      [Op.lt]: now,
+      expiresAt: {
+        [Op.lt]: now,
+      },
     },
   });
   console.log("Cron job ran");

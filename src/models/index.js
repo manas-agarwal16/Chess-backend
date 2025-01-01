@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
   {
     host: Config.host,
     dialect: Config.dialect,
-    logging: false, // if want no sql query on console.
+    logging: false, // false if want no sql query on console.
   }
 );
 
@@ -62,7 +62,7 @@ Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 
 const syncDB = async () => {
   try {
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ alter: true });
     console.log("All models were synchronized successfully.");
   } catch (error) {
     console.log("Error syncing models", error);

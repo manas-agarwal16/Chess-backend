@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { registerPlayer } from "../controllers/player.controller.js";
+import { register , verifyOTP } from "../controllers/player.controller.js";
 
 const router = Router();
 
-router.route('/register').post(registerPlayer);
+router.route('/register').post(register);
+router.route('/verify-otp').post(verifyOTP);
 
 export default router;
