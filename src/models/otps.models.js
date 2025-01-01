@@ -35,7 +35,7 @@ export default (sequelize) => {
       },
       expiresAt: {
         type: DataTypes.DATE,
-        defaultValue: () => new Date(new Date().getTime() + 5 * 60 * 1000), //5 mins after cur time.
+        defaultValue: () => new Date(new Date().getTime() + 15 * 60 * 1000), //5 mins after cur time.
       },
     },
     {

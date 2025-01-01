@@ -4,6 +4,9 @@ import { generateOTP, sendOTPThroughEmail } from "../utils/otp_generator.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { encrptPassword } from "../utils/encryptPassword.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/tokens.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 //clear
 const register = asyncHandler(async (req, res) => {
@@ -72,6 +75,7 @@ const register = asyncHandler(async (req, res) => {
     });
 });
 
+//clear
 const verifyOTP = asyncHandler(async (req, res) => {
   let { email, otp } = req.body;
   if (!email || !otp) {
@@ -131,27 +135,314 @@ const verifyOTP = asyncHandler(async (req, res) => {
     );
 });
 
-// const login = asyncHandler(async (req, res) => {
-//   const { email, handle, password } = req.body;
-//   if ((!email || !handle) && !password) {
-//     return res
-//       .status(400)
-//       .json(new ApiResponse(400, "", "Please provide all the required fields"));
-//   }
+//clear
+const resendOTP = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  console.log("email : ", email);
 
-//   const player = await player.findOne({
-//     where: {
-//       [Op.or]: [{ email }, { handle }],
-//     },
-//   });
+  const player = await OTP.findOne({ where: { email } });
 
+  if (!player) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, "", "Email not found. Try registering again"));
+  }
 
-//   if(!player){
-//     return res.status(404).json(new ApiResponse(404, "", "Player not found"));
-//   }
+  const otp = generateOTP();
 
+  const updateOTP = await OTP.update({ OTP: otp }, { where: { email } });
+  console.log("updateOTP", updateOTP);
 
+  if (!updateOTP) {
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          "",
+          "Email not found or expired. Try Registering again"
+        )
+      );
+  }
 
-// });
+  await sendOTPThroughEmail(email, otp)
+    .then(() => {
+      res
+        .status(201)
+        .json(
+          new ApiResponse(
+            201,
+            "",
+            `Thank you for registering on Chess. An OTP has been sent to your email for verification.`
+          )
+        );
+    })
+    .catch((err) => {
+      return res
+        .status(401)
+        .json(new ApiResponse(401, "", "Error in sending email"));
+    });
+});
 
-export { register, verifyOTP };
+//clear
+const login = asyncHandler(async (req, res) => {
+  const { handleOrEmail, password } = req.body;
+
+  if (!handleOrEmail || !password) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "", "Please provide all the required fields"));
+  }
+
+  let player = await Player.findOne({
+    where: {
+      [Op.or]: [{ email: handleOrEmail }, { handle: handleOrEmail }],
+    },
+  });
+
+  if (!player) {
+    return res.status(404).json(new ApiResponse(404, "", "Player not found"));
+  }
+
+  //comaparing password
+  const isMatch = await bcrypt.compare(password, player.password);
+  if (!isMatch) {
+    return res.status(401).json(new ApiResponse(401, "", "Invalid Password"));
+  }
+
+  player.password = undefined;
+
+  const accessToken = await generateAccessToken(player);
+  const refreshToken = await generateRefreshToken(player);
+
+  console.log("accessToken", accessToken);
+
+  await Player.update({ refreshToken }, { where: { id: player.id } });
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, {
+      sameSite: "None",
+      httpOnly: true,
+      secure: true,
+      maxAge: 60 * 24 * 60 * 1000, //1d
+    })
+    .cookie("refreshToken", refreshToken, {
+      sameSite: "None",
+      httpOnly: true,
+      secure: true,
+      maxAge: 60 * 24 * 60 * 1000 * 60,
+    })
+    .json(new ApiResponse(201, player, "Logged in successfully"));
+});
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "refresh token expired"));
+  }
+
+  let decodedIncomingRefreshToken;
+  try {
+    decodedIncomingRefreshToken = await jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_KEY
+    );
+  } catch (error) {
+    console.log("refresh token expired : ", error);
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "refresh token has expired!!!"));
+  }
+
+  if (!decodedIncomingRefreshToken) {
+    return res
+      .status(501)
+      .json(new ApiResponse(501, "", "Error in decoding refresh token"));
+  }
+
+  const player = await Player.findOne({
+    where: {
+      id: decodedIncomingRefreshToken.id,
+    },
+  });
+
+  if (!player) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "Invalid refreshToken"));
+  }
+
+  const dbRefreshToken = player.refreshToken;
+
+  if (!dbRefreshToken) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "player has logged out already!!!"));
+  }
+
+  if (dbRefreshToken !== incomingRefreshToken) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "Invalid refreshToken"));
+  }
+
+  const newAccessToken = await player.generateAccessToken(player);
+  if (!newAccessToken) {
+    return res
+      .status(501)
+      .json(new ApiResponse(501, "", "Error in generating accessToken"));
+  }
+
+  return res
+    .status(201)
+    .cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: 60 * 24 * 60 * 1000,
+    })
+    .json(
+      new ApiResponse(
+        201,
+        {
+          accessToken: newAccessToken,
+          handle: player.handle,
+        },
+        "AccessToken is refreshed successfully!!!"
+      )
+    );
+});
+
+//clear
+const getCurrentPlayer = asyncHandler(async (req, res) => {
+  let player;
+  try {
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
+
+    console.log("token : ", token);
+
+    if (!token) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            401,
+            { loginStatus: false, playerData: {} },
+            "Unauthorized request!!"
+          )
+        );
+    }
+
+    const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_KEY);
+    console.log("decodedToken : ", decodedToken);
+
+    if (!decodedToken) {
+      return res
+        .status(501)
+        .json(new ApiResponse(501, "", "error in decoding token"));
+    }
+
+    player = await Player.findOne({
+      attributes: { exclude: ["password", "refreshToken"] },
+      where: {
+        email: decodedToken.email,
+      },
+    });
+
+    console.log("player : ", player);
+
+    if (!player) {
+      return res
+        .status(401)
+        .json(
+          new ApiResponse(
+            401,
+            { loginStatus: false, playerData: {} },
+            "Unauthorized request!!"
+          )
+        );
+    }
+
+    res
+      .status(201)
+      .json(
+        new ApiResponse(
+          201,
+          { loginStatus: true, playerData: player },
+          "Current player details fetched successfully"
+        )
+      );
+  } catch (error) {
+    console.log("error : ", error);
+
+    return res
+      .status(401)
+      .json(
+        new ApiResponse(
+          401,
+          { loginStatus: false, playerData: {} },
+          "invalid access token"
+        )
+      );
+  }
+});
+
+//clear
+const logout = asyncHandler(async (req, res) => {
+  console.log("logout");
+  const { id } = req.player;
+
+  const updateRefreshToken = await Player.update(
+    {
+      refreshToken: undefined,
+    },
+    {
+      where: {
+        id: id,
+      },
+    }
+  );
+  console.log("updateRefreshToken", updateRefreshToken);
+  
+
+  if (!updateRefreshToken) {
+    return res
+      .status(501)
+      .json(new ApiResponse(501, "", "Error in updating refresh token"));
+  }
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  };
+
+  res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+      new ApiResponse(
+        201,
+        { handle: req.player.handle },
+        `${req.player.handle} has logged out successfully`
+      )
+    );
+});
+
+export {
+  register,
+  verifyOTP,
+  resendOTP,
+  login,
+  refreshAccessToken,
+  logout,
+  getCurrentPlayer,
+};
