@@ -1,16 +1,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "./db/connectDB.js";
-import { app } from "./app.js";
+import { app, server, io } from "./app.js";
 import "./utils/nodeCron.js";
 
 (async () => {
   try {
     const res = await connectDB()
-      .then(() => {        
+      .then(() => {
         console.log("DB Connected , index.js");
-        app.listen(process.env.PORT || 4000, () => {
-          console.log(`Server is running on port ${process.env.PORT}`);
+        server.listen(process.env.PORT, () => {
+          console.log(`Server is running on http://localhost:${process.env.PORT}`);
         });
       })
       .catch((error) => {

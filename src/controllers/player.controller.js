@@ -53,7 +53,7 @@ const register = asyncHandler(async (req, res) => {
     password,
     avatar: avatarURL,
   });
-  console.log("otpPlayer", otpPlayer);
+  // console.log("otpPlayer", otpPlayer);
 
   await sendOTPThroughEmail(email, otp)
     .then(() => {

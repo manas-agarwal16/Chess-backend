@@ -1,9 +1,10 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import http from "http";
+import {SocketHandler} from "./controllers/sockets.controller.js";
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
 
@@ -21,16 +22,20 @@ app.use(
 );
 
 app.use(cookieParser());
-app.use(express.json({ limit: "10kb" })); //for incoming requests in jdon format
-app.use(express.urlencoded({ extended: true })); // for incoming requests in url
-// app.use(express.static("public"));
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true }));
+
+//http server for handling http request.
+const server = http.createServer(app);
+
+const io = SocketHandler(server);
 
 import playerRouter from "./routes/player.routes.js";
-
-app.use('/players', playerRouter);
+app.use("/players", playerRouter);
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
 
-export {app};
+
+export { app , server , io };
