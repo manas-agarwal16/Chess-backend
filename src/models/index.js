@@ -40,9 +40,9 @@ Game.belongsTo(Player, { foreignKey: "player2Id", as: "Player2" });
 Game.belongsTo(Player, { foreignKey: "winnerId", as: "Winner" });
 
 //player to waiting: one to one
-Player.hasOne(Waiting, { foreignKey: "waitingPlayerId", as: "WaitingPlayer" });
+Player.hasOne(Waiting, { foreignKey: "playerId", as: "WaitingPlayer" });
 Waiting.belongsTo(Player, {
-  foreignKey: "waitingPlayerId",
+  foreignKey: "playerId",
   as: "WaitingPlayerDetails",
 });
 

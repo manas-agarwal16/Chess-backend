@@ -9,7 +9,7 @@ export default (sequelize) => {
         type: DataTypes.INTEGER,
         autoIncrement: true,
       },
-      waitingPlayerId: {
+      playerId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
@@ -17,13 +17,10 @@ export default (sequelize) => {
           key: "id",
         },
       },
-      // joinedPlayerId: {
-      //   type: DataTypes.INTEGER,
-      //   references: {
-      //     model: "Players",
-      //     key: "id",
-      //   },
-      // },
+      roomName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       tableName: "waitings",
