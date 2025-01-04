@@ -24,6 +24,8 @@ const register = asyncHandler(async (req, res) => {
       [Op.or]: [{ email }, { handle }],
     },
   });
+  exists = exists?.dataValues;
+
   console.log("exists", exists);
 
   if (exists) {
@@ -78,6 +80,24 @@ const register = asyncHandler(async (req, res) => {
 //clear
 const verifyOTP = asyncHandler(async (req, res) => {
   let { email, otp } = req.body;
+
+  const alreadyExists = await Player.findOne({
+    where: {
+      email,
+    },
+  });
+
+  if (alreadyExists) {
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(409, "", "You have already registered. Please login")
+      );
+  }
+
+  console.log("email", email);
+  console.log("otp", otp);
+
   if (!email || !otp) {
     return res
       .status(409)
@@ -85,9 +105,6 @@ const verifyOTP = asyncHandler(async (req, res) => {
   }
 
   otp = Number(otp);
-
-  console.log("email", email);
-  console.log("otp", otp);
 
   const otpDb = await OTP.findOne({
     where: {
@@ -123,6 +140,12 @@ const verifyOTP = asyncHandler(async (req, res) => {
   });
 
   console.log("player", player);
+
+  await OTP.destroy({
+    where: {
+      email,
+    },
+  });
 
   res
     .status(201)
@@ -186,9 +209,9 @@ const resendOTP = asyncHandler(async (req, res) => {
 
 //clear
 const login = asyncHandler(async (req, res) => {
-  const { handleOrEmail, password } = req.body;
+  const { emailOrHandle, password } = req.body;
 
-  if (!handleOrEmail || !password) {
+  if (!emailOrHandle || !password) {
     return res
       .status(400)
       .json(new ApiResponse(400, "", "Please provide all the required fields"));
@@ -196,7 +219,7 @@ const login = asyncHandler(async (req, res) => {
 
   let player = await Player.findOne({
     where: {
-      [Op.or]: [{ email: handleOrEmail }, { handle: handleOrEmail }],
+      [Op.or]: [{ email: emailOrHandle }, { handle: emailOrHandle }],
     },
   });
 
@@ -237,6 +260,8 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
+  console.log('in refreshAccessToken');
+  
   const incomingRefreshToken =
     req.cookies?.refreshToken || req.body.refreshToken;
 
@@ -356,6 +381,8 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
       },
     });
 
+    player = player.dataValues;
+
     console.log("player : ", player);
 
     if (!player) {
@@ -410,7 +437,6 @@ const logout = asyncHandler(async (req, res) => {
     }
   );
   console.log("updateRefreshToken", updateRefreshToken);
-  
 
   if (!updateRefreshToken) {
     return res

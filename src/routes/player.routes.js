@@ -17,7 +17,7 @@ router.route("/register").post(register);
 router.route("/verify-otp").post(verifyOTP);
 router.route("/resend-otp/:email").get(resendOTP);
 router.route("/login").post(login);
-router.route("/refresh-access-token").post(refreshAccessToken);
+router.route("/refresh-access-token").get(refreshAccessToken);
 router.route("/get-current-player").get(getCurrentPlayer);
 router.route("/logout").get(verifyJWT, logout);
 

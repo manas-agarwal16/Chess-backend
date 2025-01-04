@@ -4,7 +4,7 @@ import { OTP } from "../models/index.js";
 
 //clear
 cron.schedule("* * * * *", async () => {
-  console.log("here");
+  // console.log("here");
 
   const now = new Date();
   await OTP.destroy({
@@ -14,5 +14,5 @@ cron.schedule("* * * * *", async () => {
       },
     },
   });
-  console.log("Cron job ran");
+  // console.log("Cron job ran" );
 });

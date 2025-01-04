@@ -1,5 +1,4 @@
-import e from "express";
-import { DataTypes, Model } from "sequelize";
+import { DataTypes } from "sequelize";
 
 export default (sequelize) => {
   const OTPModel = sequelize.define(
