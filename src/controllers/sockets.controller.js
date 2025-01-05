@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { Waiting, Player, GameState } from "../models/index.js";
 import { Chess } from "chess.js";
+import { Op } from "sequelize";
 
 //game.fen() -> for current state of the chess board , return a string,
 
@@ -19,8 +20,18 @@ export const SocketHandler = (server) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on("playWithStranger", async (playerId) => {
+      console.log("playerId : ", playerId);
+      if (!playerId) {
+        return socket.emit("error", "Player not found!!! invalid player id");
+      }
+
       let waitingPlayer = await Waiting.findOne({
         order: [["createdAt", "ASC"]],
+        where: {
+          [Op.not]: {
+            playerId: playerId,
+          },
+        },
       });
 
       waitingPlayer = waitingPlayer?.dataValues;
@@ -49,6 +60,10 @@ export const SocketHandler = (server) => {
             id: waitingPlayer.playerId,
           },
         });
+
+        if (!player1 || !player2) {
+          return socket.emit("error", "Player not found!!! invalid player id");
+        }
 
         player1 = player1?.dataValues;
         player2 = player2?.dataValues;

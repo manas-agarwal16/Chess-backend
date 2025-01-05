@@ -296,6 +296,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     },
   });
 
+  player = player?.dataValues;
+
   if (!player) {
     return res
       .status(401)
