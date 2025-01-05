@@ -16,8 +16,8 @@ const register = asyncHandler(async (req, res) => {
       .status(400)
       .json(new ApiResponse(400, "", "Please provide all the required fields"));
   }
-  console.log(req.body);
-  console.log("avatarURL", avatarURL);
+  // console.log(req.body);
+  // console.log("avatarURL", avatarURL);
 
   let exists = await Player.findOne({
     where: {
@@ -26,7 +26,7 @@ const register = asyncHandler(async (req, res) => {
   });
   exists = exists?.dataValues;
 
-  console.log("exists", exists);
+  // console.log("exists", exists);
 
   if (exists) {
     return res
@@ -95,8 +95,8 @@ const verifyOTP = asyncHandler(async (req, res) => {
       );
   }
 
-  console.log("email", email);
-  console.log("otp", otp);
+  // console.log("email", email);
+  // console.log("otp", otp);
 
   if (!email || !otp) {
     return res
@@ -123,14 +123,14 @@ const verifyOTP = asyncHandler(async (req, res) => {
       );
   }
 
-  console.log("database OTP", otpDb.OTP);
+  // console.log("database OTP", otpDb.OTP);
 
   if (otpDb.OTP !== otp) {
     return res.status(401).json(new ApiResponse(401, "", "Invalid OTP!!!"));
   }
 
   const encrptedPassword = await encrptPassword(otpDb.password);
-  console.log("encrptedPassword", encrptedPassword);
+  // console.log("encrptedPassword", encrptedPassword);
 
   const player = await Player.create({
     handle: otpDb.handle,
@@ -139,7 +139,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     avatar: otpDb.avatar,
   });
 
-  console.log("player", player);
+  // console.log("player", player);
 
   await OTP.destroy({
     where: {
@@ -161,7 +161,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
 //clear
 const resendOTP = asyncHandler(async (req, res) => {
   const { email } = req.params;
-  console.log("email : ", email);
+  // console.log("email : ", email);
 
   const player = await OTP.findOne({ where: { email } });
 
@@ -174,7 +174,7 @@ const resendOTP = asyncHandler(async (req, res) => {
   const otp = generateOTP();
 
   const updateOTP = await OTP.update({ OTP: otp }, { where: { email } });
-  console.log("updateOTP", updateOTP);
+  // console.log("updateOTP", updateOTP);
 
   if (!updateOTP) {
     return res
@@ -238,7 +238,7 @@ const login = asyncHandler(async (req, res) => {
   const accessToken = await generateAccessToken(player);
   const refreshToken = await generateRefreshToken(player);
 
-  console.log("accessToken", accessToken);
+  // console.log("accessToken", accessToken);
 
   await Player.update({ refreshToken }, { where: { id: player.id } });
 
@@ -256,12 +256,18 @@ const login = asyncHandler(async (req, res) => {
       secure: true,
       maxAge: 60 * 24 * 60 * 1000 * 60,
     })
-    .json(new ApiResponse(201, player, "Logged in successfully"));
+    .json(
+      new ApiResponse(
+        201,
+        { loginStatus: true, playerData: player },
+        "Logged in successfully"
+      )
+    );
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  console.log('in refreshAccessToken');
-  
+  // console.log('in refreshAccessToken');
+
   const incomingRefreshToken =
     req.cookies?.refreshToken || req.body.refreshToken;
 
@@ -278,7 +284,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_KEY
     );
   } catch (error) {
-    console.log("refresh token expired : ", error);
+    // console.log("refresh token expired : ", error);
     return res
       .status(401)
       .json(new ApiResponse(401, "", "refresh token has expired!!!"));
@@ -289,6 +295,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(501)
       .json(new ApiResponse(501, "", "Error in decoding refresh token"));
   }
+
+  console.log("decodedIncomingRefreshToken : ", decodedIncomingRefreshToken);
+
+  if(!decodedIncomingRefreshToken.id){
+    return res.status(401).json(new ApiResponse(401, "", "Invalid refreshToken"));
+  }
+  
 
   const player = await Player.findOne({
     where: {
@@ -368,7 +381,7 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
     }
 
     const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_KEY);
-    console.log("decodedToken : ", decodedToken);
+    // console.log("decodedToken : ", decodedToken);
 
     if (!decodedToken) {
       return res
@@ -385,7 +398,7 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
 
     player = player.dataValues;
 
-    console.log("player : ", player);
+    // console.log("player : ", player);
 
     if (!player) {
       return res
@@ -425,7 +438,7 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
 
 //clear
 const logout = asyncHandler(async (req, res) => {
-  console.log("logout");
+  // console.log("logout");
   const { id } = req.player;
 
   const updateRefreshToken = await Player.update(
@@ -438,7 +451,7 @@ const logout = asyncHandler(async (req, res) => {
       },
     }
   );
-  console.log("updateRefreshToken", updateRefreshToken);
+  // console.log("updateRefreshToken", updateRefreshToken);
 
   if (!updateRefreshToken) {
     return res

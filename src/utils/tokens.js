@@ -15,7 +15,7 @@ const generateAccessToken = (player) => {
 const generateRefreshToken = (player) => {
   return jwt.sign(
     {
-      id: player._id,
+      id: player.id,
     },
     process.env.REFRESH_TOKEN_KEY,
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }

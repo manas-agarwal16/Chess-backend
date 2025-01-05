@@ -17,34 +17,34 @@ export const SocketHandler = (server) => {
   let game = new Chess();
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
-
     socket.on("playWithStranger", async (playerId) => {
-      console.log("playerId : ", playerId);
+      console.log("playerId socketId : ", playerId, socket.id);
       if (!playerId) {
         return socket.emit("error", "Player not found!!! invalid player id");
-      }
+      } 
 
       let waitingPlayer = await Waiting.findOne({
-        order: [["createdAt", "ASC"]],
+        order: [["createdAt", "ASC"]], 
         where: {
           [Op.not]: {
             playerId: playerId,
           },
         },
+        // logging: console.log,
       });
 
+      // console.log("waitingPlayer : ", waitingPlayer);
       waitingPlayer = waitingPlayer?.dataValues;
-      console.log("waitingPlayer : ", waitingPlayer);
 
       if (waitingPlayer) {
+        const roomName = waitingPlayer?.roomName;
+        // console.log("roomName : ", roomName);
+
         await Waiting.destroy({
           where: {
-            id: waitingPlayer.id,
+            playerId: waitingPlayer.playerId,
           },
         });
-
-        const roomName = waitingPlayer?.roomName;
 
         //here how to join the current player and the waitingPlayer in the same room.
         socket.join(roomName);
@@ -68,8 +68,8 @@ export const SocketHandler = (server) => {
         player1 = player1?.dataValues;
         player2 = player2?.dataValues;
 
-        console.log("player1 : ", player1);
-        console.log("player2 : ", player2);
+        // console.log("player1 : ", player1);
+        // console.log("player2 : ", player2);
         const color = Math.floor(Math.random() * 2) === 0 ? "white" : "black";
         player1.color = color;
         player2.color = color === "white" ? "black" : "white";
@@ -84,11 +84,6 @@ export const SocketHandler = (server) => {
         });
 
         io.to(roomName).emit("startTheGame", { player1, player2 });
-
-        //state of board
-        socket.on("StateOfBoard", () => {
-          socket.emit("StateOfBoard", game.fen());
-        });
       } else {
         const roomName = `room#${socket.id}`;
         socket.join(roomName);
@@ -98,6 +93,21 @@ export const SocketHandler = (server) => {
         });
         socket.emit("WaitingForAPlayer");
       }
+    });
+
+    socket.on("userDisconnected", async (playerId) => {
+      console.log("userDisconnected : ", playerId);
+      
+      await Waiting.destroy({
+        where: {
+          playerId: playerId,
+        },
+      });
+    });
+
+    //state of board
+    socket.on("StateOfBoard", () => {
+      socket.emit("StateOfBoard", game.fen());
     });
   });
 
