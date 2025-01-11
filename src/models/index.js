@@ -1,17 +1,23 @@
 import { Sequelize } from "sequelize";
-import Config from "../config/config.js";
+import config from "../config/config.js";
 
 import dotenv from "dotenv";
 dotenv.config();
 
 const sequelize = new Sequelize(
-  Config.database,
-  Config.username,
-  Config.password,
+  config.database,
+  config.username,
+  config.password,
   {
-    host: Config.host,
-    dialect: Config.dialect,
-    logging: false, // false if want no sql query on console.
+    host: config.host,
+    port: config.port || 5432,
+    dialect: config.dialect,
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+    logging: false,
+    // logging: console.log, // Disable SQL logging in production
   }
 );
 
@@ -65,8 +71,12 @@ Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 //players to GameState one to one
 Player.hasOne(GameState, { foreignKey: "player1Id", as: "Player1GameState" });
 Player.hasOne(GameState, { foreignKey: "player2Id", as: "Player2GameState" });
+Player.hasOne(GameState, {foreignKey: 'winnerId', as: 'Winner'});
+Player.hasOne(GameState, {foreignKey: 'losserId', as: 'Losser'});
 GameState.belongsTo(Player, { foreignKey: "player1Id", as: "Player1Details" });
 GameState.belongsTo(Player, { foreignKey: "player2Id", as: "Player2Details" });
+GameState.belongsTo(Player, {foreignKey: 'winnerId', as: 'WinnerDetails'});
+GameState.belongsTo(Player, {foreignKey: 'losserId', as: 'LosserDetails'});
 
 const syncDB = async () => {
   try {

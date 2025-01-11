@@ -10,12 +10,14 @@ import jwt from "jsonwebtoken";
 
 //clear
 const register = asyncHandler(async (req, res) => {
-  const { handle, email, password, avatarURL } = req.body;
+  let { handle, email, password, avatarURL } = req.body;
   if (!handle || !email || !password) {
     return res
       .status(400)
       .json(new ApiResponse(400, "", "Please provide all the required fields"));
   }
+  handle = handle.toLowerCase();
+  email = email.toLowerCase();
   // console.log(req.body);
   // console.log("avatarURL", avatarURL);
 
@@ -209,7 +211,9 @@ const resendOTP = asyncHandler(async (req, res) => {
 
 //clear
 const login = asyncHandler(async (req, res) => {
-  const { emailOrHandle, password } = req.body;
+  let { emailOrHandle, password } = req.body;
+
+  emailOrHandle = emailOrHandle.toLowerCase();
 
   if (!emailOrHandle || !password) {
     return res
@@ -303,7 +307,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
   
 
-  const player = await Player.findOne({
+  let player = await Player.findOne({
     where: {
       id: decodedIncomingRefreshToken.id,
     },

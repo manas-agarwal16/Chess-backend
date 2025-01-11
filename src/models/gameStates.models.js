@@ -27,8 +27,32 @@ export default (sequelize) => {
           key: "id",
         },
       },
-      board: {
+      chessBoardState: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+      },
+      player1Color: {
         type: DataTypes.STRING,
+      },
+      player2Color: {
+        type: DataTypes.STRING,
+      },
+      winnerId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "players",
+          key: "id",
+        },
+      },
+      losserId: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "players",
+          key: "id",
+        },
+      },
+      itsDraw: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {
