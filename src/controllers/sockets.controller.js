@@ -1,7 +1,8 @@
 import { Server } from "socket.io";
 import { Waiting, Player, Game } from "../models/index.js";
 import { Chess } from "chess.js";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
+import { kFactor } from "../utils/kFactor.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
@@ -143,12 +144,11 @@ export const SocketHandler = (server) => {
               ],
             });
             console.log("newGame: ", newGame?.dataValues);
-          }
-          else{
-            console.log('only unique roomName is allowed');
+          } else {
+            console.log("only unique roomName is allowed");
           }
         } catch (error) {
-          console.log('only unique roomName is allowed');
+          console.log("only unique roomName is allowed");
         }
       }
     );
@@ -181,9 +181,12 @@ export const SocketHandler = (server) => {
       let pastHistory = await Game.findOne({
         where: {
           roomName: data.roomName,
-          player1Id: data.player1Id,
         },
       });
+
+      if (!pastHistory) {
+        return;
+      }
 
       console.log("pastHistory : ", pastHistory);
       pastHistory = pastHistory?.dataValues?.history;
@@ -195,44 +198,195 @@ export const SocketHandler = (server) => {
         {
           where: {
             roomName: data.roomName,
-            player1Id: data.player1Id,
           },
+          returning: true,
         }
       );
 
-      updatedBoard = updatedBoard?.dataValues;
       console.log("updatedBoard : ", updatedBoard);
 
       io.to(data.roomName).emit("makeMove", data.position);
     });
 
-    socket.on("checkmate", async (data) => {
+    //checkmate and rating calculations.
+    socket.on("checkmate", async ({ roomName, winnerId, losserId }) => {
+      console.log("checkmate : ", roomName, winnerId, losserId);
+
+      let playedGame = await Game.findOne({
+        where: {
+          roomName: roomName,
+        },
+      });
+
+      if (!playedGame) {
+        socket.emit("error", "playedGame null");
+        return;
+      }
+
+      playedGame = playedGame?.dataValues;
+      console.log("playedGame : ", playedGame);
+
+      const player1RatingBefore = playedGame.player1RatingBefore;
+      const player2RatingBefore = playedGame.player2RatingBefore;
+
+      let player1RatingAfter, player2RatingAfter;
+
+      if (winnerId === playedGame.player1Id) {
+        player1RatingAfter =
+          player1RatingBefore +
+          kFactor(player1RatingBefore) *
+            (1 -
+              1 /
+                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
+                  1));
+
+        player2RatingAfter =
+          player2RatingBefore +
+          kFactor(player2RatingBefore) *
+            (0 -
+              1 /
+                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
+                  1));
+      } else {
+        player2RatingAfter =
+          player2RatingBefore +
+          kFactor(player2RatingBefore) *
+            (1 -
+              1 /
+                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
+                  1));
+
+        player1RatingAfter =
+          player1RatingBefore +
+          kFactor(player1RatingBefore) *
+            (0 -
+              1 /
+                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
+                  1));
+      }
+
+      player1RatingAfter = Math.floor(player1RatingAfter);
+      player2RatingAfter = Math.floor(player2RatingAfter);
+
+      console.log("player1RatingAfter: ", player1RatingAfter);
+      console.log("player2RatingAfter: ", player2RatingAfter);
       await Game.update(
         {
-          winnerId: data.winnerId,
-          losserId: data.losserId,
+          winnerId: winnerId,
+          losserId: losserId,
+          gameStatus: "finished",
+          player1RatingAfter: player1RatingAfter,
+          player2RatingAfter: player2RatingAfter,
         },
         {
           where: {
-            roomName: data.roomName,
+            roomName: roomName,
           },
         }
       );
-      socket.emit("itsCheckmate");
+      await Player.update(
+        {
+          rating: player1RatingAfter,
+        },
+        {
+          where: {
+            id: playedGame.player1Id,
+          },
+        }
+      );
+
+      await Player.update(
+        {
+          rating: player2RatingAfter,
+        },
+        {
+          id: playedGame.player2Id,
+        }
+      );
+      socket.emit("itsCheckmate", {
+        player1RatingBefore,
+        player1RatingAfter,
+        player2RatingBefore,
+        player2RatingAfter,
+      });
     });
 
-    socket.on("draw", async (data) => {
+    socket.on("draw", async ({ roomName }) => {
+      let playedGame = await Game.findOne({
+        where: {
+          roomName: roomName,
+        },
+      });
+      if (!playedGame) {
+        socket.emit("error", "playedGame null");
+        return;
+      }
+
+      playedGame = playedGame.dataValues;
+
+      const player1RatingBefore = playedGame.player1RatingBefore;
+      const player2RatingBefore = playedGame.player2RatingBefore;
+
+      let player1RatingAfter, player2RatingAfter;
+
+      player1RatingAfter =
+        player1RatingBefore +
+        kFactor(player2RatingBefore) * // kfactor of 2 se multiply
+          (0.5 -
+            0.5 /
+              (1000 / Math.abs(player1RatingBefore - player2RatingBefore) + 1));
+
+      player2RatingAfter =
+        player2RatingBefore +
+        kFactor(player1RatingBefore) * //k-factor of one se multiply
+          (0.5 -
+            0.5 / (1000 / Math.abs(player1RatingBefore - player2RatingBefore)));
+
+      player1RatingAfter = Math.floor(player1RatingAfter);
+      player2RatingAfter = Math.floor(player2RatingAfter);
+
+      console.log("player1RatingAfter: ", player1RatingAfter);
+      console.log("player2RatingAfter: ", player2RatingAfter);
       await Game.update(
         {
-          draw: true,
+          winnerId: winnerId,
+          losserId: losserId,
+          gameStatus: "finished",
+          player1RatingAfter: player1RatingAfter,
+          player2RatingAfter: player2RatingAfter,
         },
         {
           where: {
-            roomName: data.roomName,
+            roomName: roomName,
           },
         }
       );
-      socket.emit("itsDraw");
+
+      await Player.update(
+        {
+          rating: player1RatingAfter,
+        },
+        {
+          where: {
+            id: playedGame.player1Id,
+          },
+        }
+      );
+
+      await Player.update(
+        {
+          rating: player2RatingAfter,
+        },
+        {
+          id: playedGame.player2Id,
+        }
+      );
+      socket.emit("itsDraw", {
+        player1RatingBefore,
+        player1RatingAfter,
+        player2RatingBefore,
+        player2RatingAfter,
+      });
     });
 
     //user disconnected

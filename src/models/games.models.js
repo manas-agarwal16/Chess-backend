@@ -1,5 +1,8 @@
 import { DataTypes } from "sequelize";
 
+//K-factor for rating 1200 => 100, 1400 => 50, 1600 => 25, 1800 => 10 1900 => 7 1950 => 3
+
+
 export default (sequelize) => {
   const Game = sequelize.define(
     "Game",
