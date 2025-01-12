@@ -32,6 +32,7 @@ export default (sequelize) => {
       refreshToken: {
         type: DataTypes.STRING,
       },
+      
     },
     {
       tableName: "players",
