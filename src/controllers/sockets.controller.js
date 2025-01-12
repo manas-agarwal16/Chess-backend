@@ -1,8 +1,8 @@
 import { Server } from "socket.io";
 import { Waiting, Player, Game } from "../models/index.js";
 import { Chess } from "chess.js";
-import { Op } from "sequelize";
-import { kFactor } from "../utils/kFactor.js";
+import { Op, where } from "sequelize";
+import { wFactor, lFactor } from "../utils/kFactor.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
@@ -234,35 +234,23 @@ export const SocketHandler = (server) => {
       if (winnerId === playedGame.player1Id) {
         player1RatingAfter =
           player1RatingBefore +
-          kFactor(player1RatingBefore) *
-            (1 -
-              1 /
-                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
-                  1));
+          wFactor(player1RatingBefore) *
+            (player2RatingBefore / player1RatingBefore);
 
         player2RatingAfter =
-          player2RatingBefore +
-          kFactor(player2RatingBefore) *
-            (0 -
-              1 /
-                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
-                  1));
+          player2RatingBefore -
+          lFactor(player2RatingBefore) *
+            (player1RatingBefore / player2RatingBefore);
       } else {
         player2RatingAfter =
           player2RatingBefore +
-          kFactor(player2RatingBefore) *
-            (1 -
-              1 /
-                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
-                  1));
+          wFactor(player2RatingBefore) *
+            (player1RatingBefore / player2RatingBefore);
 
         player1RatingAfter =
           player1RatingBefore +
-          kFactor(player1RatingBefore) *
-            (0 -
-              1 /
-                (1000 / Math.abs(player1RatingBefore - player2RatingBefore) +
-                  1));
+          lFactor(player1RatingBefore) *
+            (player2RatingBefore / player1RatingBefore);
       }
 
       player1RatingAfter = Math.floor(player1RatingAfter);
@@ -300,7 +288,9 @@ export const SocketHandler = (server) => {
           rating: player2RatingAfter,
         },
         {
-          id: playedGame.player2Id,
+          where: {
+            id: playedGame.player2Id,
+          },
         }
       );
       socket.emit("itsCheckmate", {
@@ -308,9 +298,12 @@ export const SocketHandler = (server) => {
         player1RatingAfter,
         player2RatingBefore,
         player2RatingAfter,
+        player1Id: playedGame.player1Id,
+        player2Id: playedGame.player2Id,
       });
     });
 
+    //draw and rating calculations.
     socket.on("draw", async ({ roomName }) => {
       let playedGame = await Game.findOne({
         where: {
@@ -330,20 +323,13 @@ export const SocketHandler = (server) => {
       let player1RatingAfter, player2RatingAfter;
 
       player1RatingAfter =
-        player1RatingBefore +
-        kFactor(player2RatingBefore) * // kfactor of 2 se multiply
-          (0.5 -
-            0.5 /
-              (1000 / Math.abs(player1RatingBefore - player2RatingBefore) + 1));
+        player1RatingBefore + (player2RatingBefore - player1RatingBefore) / 5;
 
       player2RatingAfter =
-        player2RatingBefore +
-        kFactor(player1RatingBefore) * //k-factor of one se multiply
-          (0.5 -
-            0.5 / (1000 / Math.abs(player1RatingBefore - player2RatingBefore)));
+        player2RatingBefore + (player1RatingBefore - player2RatingBefore) / 5;
 
-      player1RatingAfter = Math.floor(player1RatingAfter);
-      player2RatingAfter = Math.floor(player2RatingAfter);
+      player1RatingAfter = Math.ceil(player1RatingAfter);
+      player2RatingAfter = Math.ceil(player2RatingAfter);
 
       console.log("player1RatingAfter: ", player1RatingAfter);
       console.log("player2RatingAfter: ", player2RatingAfter);
@@ -378,7 +364,9 @@ export const SocketHandler = (server) => {
           rating: player2RatingAfter,
         },
         {
-          id: playedGame.player2Id,
+          where: {
+            id: playedGame.player2Id,
+          },
         }
       );
       socket.emit("itsDraw", {
@@ -386,6 +374,8 @@ export const SocketHandler = (server) => {
         player1RatingAfter,
         player2RatingBefore,
         player2RatingAfter,
+        player1Id: playedGame.player1Id,
+        player2Id: playedGame.player2Id,
       });
     });
 
