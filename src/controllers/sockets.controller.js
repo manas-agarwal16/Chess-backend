@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { Waiting, Player, GameState } from "../models/index.js";
+import { Waiting, Player, Game } from "../models/index.js";
 import { Chess } from "chess.js";
 import { Op, where } from "sequelize";
 
@@ -77,7 +77,7 @@ export const SocketHandler = (server) => {
 
         //start the game
 
-        // await GameState.create({
+        // await Game.create({
         //   roomName: roomName,
         //   player1Id: player1.id,
         //   player2Id: player2.id,
@@ -100,51 +100,102 @@ export const SocketHandler = (server) => {
       }
     });
 
-    //user disconnected
-    socket.on("userDisconnected", async (playerId) => {
-      console.log("userDisconnected : ", playerId);
+    //playersInfo when the match starts roomName player1 are candidate keys. player1 is you.
+    socket.on(
+      "playersInfo",
+      async ({
+        roomName,
+        player1Id,
+        player2Id,
+        player1RatingBefore,
+        player2RatingBefore,
+        player1Color,
+        player2Color,
+      }) => {
+        console.log(
+          "playersInfo : ",
+          roomName,
+          player1Id,
+          player2Id,
+          player1RatingBefore,
+          player2RatingBefore,
+          player1Color,
+          player2Color
+        );
 
-      await Waiting.destroy({
-        where: {
-          playerId: playerId,
-        },
-      });
-    });
+        let exists = await Game.findOne({
+          where: {
+            roomName: roomName,
+          },
+        });
+        try {
+          if (!exists) {
+            let newGame = await Game.create({
+              roomName,
+              player1Id,
+              player2Id,
+              player1Color,
+              player2Color,
+              player1RatingBefore,
+              player2RatingBefore,
+              history: [
+                "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+              ],
+            });
+            console.log("newGame: ", newGame?.dataValues);
+          }
+          else{
+            console.log('only unique roomName is allowed');
+          }
+        } catch (error) {
+          console.log('only unique roomName is allowed');
+        }
+      }
+    );
 
     //new chess position
     socket.on("newChessPosition", async (data) => {
       console.log("newChessPosition : ", data);
 
-      let exists = await GameState.findOne({
+      // let exists = await Game.findOne({
+      //   where: {
+      //     roomName: data.roomName,
+      //   },
+      // });
+
+      // if (!exists) {
+      // let exists = await Game.create({
+      //   roomName: data.roomName,
+      //   player1Id: data.player1Id,
+      //   player2Id: data.player2Id,
+      //   history: ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"],
+      //   player1Color: data.player1Color,
+      //   player2Color: data.player2Color,
+      // });
+      // }
+
+      // exists = exists?.dataValues;
+
+      // console.log("exists : ", exists);
+
+      let pastHistory = await Game.findOne({
         where: {
           roomName: data.roomName,
+          player1Id: data.player1Id,
         },
       });
 
-      if (!exists) {
-        exists = await GameState.create({
-          roomName: data.roomName,
-          player1Id: data.player1Id,
-          player2Id: data.player2Id,
-          chessBoardState: [
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-          ],
-          player1Color: data.player1Color,
-          player2Color: data.player2Color,
-        });
-      }
+      console.log("pastHistory : ", pastHistory);
+      pastHistory = pastHistory?.dataValues?.history;
 
-      exists = exists?.dataValues;
-
-      console.log("exists : ", exists);
-
-      let updatedBoard = await GameState.update(
+      let updatedBoard = await Game.update(
         {
-          chessBoardState: [...exists.chessBoardState, data.position],
+          history: [...pastHistory, data.position],
         },
         {
           where: {
             roomName: data.roomName,
+            player1Id: data.player1Id,
           },
         }
       );
@@ -156,7 +207,7 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("checkmate", async (data) => {
-      await GameState.update(
+      await Game.update(
         {
           winnerId: data.winnerId,
           losserId: data.losserId,
@@ -171,9 +222,9 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("draw", async (data) => {
-      await GameState.update(
+      await Game.update(
         {
-          itsDraw: true,
+          draw: true,
         },
         {
           where: {
@@ -182,6 +233,17 @@ export const SocketHandler = (server) => {
         }
       );
       socket.emit("itsDraw");
+    });
+
+    //user disconnected
+    socket.on("userDisconnected", async (playerId) => {
+      console.log("userDisconnected : ", playerId);
+
+      await Waiting.destroy({
+        where: {
+          playerId: playerId,
+        },
+      });
     });
   });
 
