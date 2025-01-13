@@ -12,6 +12,7 @@ export default (sequelize) => {
       playerId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        unique: true,
         references: {
           model: "players",
           key: "id",

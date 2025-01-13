@@ -1,7 +1,8 @@
 import { Server } from "socket.io";
-import { Waiting, Player, Game } from "../models/index.js";
+import { Waiting, Player, Game, Friend } from "../models/index.js";
 import { Chess } from "chess.js";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
+import { uniqueCode } from "../utils/uniqueCode.js";
 import { wFactor, lFactor } from "../utils/Factors.js";
 
 //game.fen() -> for current state of the chess board , return a string,
@@ -91,18 +92,106 @@ export const SocketHandler = (server) => {
       } else {
         const roomName = `room#${socket.id}`;
         socket.join(roomName);
-        await Waiting.create({
-          playerId,
-          roomName: roomName,
-        });
+        try {
+          await Waiting.create({
+            playerId,
+            roomName: roomName,
+          });
+          console.log("already in waitings");
+        } catch (error) {
+          console.log("already in waitings");
+        }
+
         console.log("waiting for a player");
 
         socket.emit("WaitingForAPlayer", roomName);
       }
     });
 
-    socket.on('playWithFriendCreate', async (playerId) => {
-      await Friend
+    //create room for friend
+    socket.on("createRoom", async (playerId) => {
+      const exists = await Friend.findOne({
+        where: {
+          playerId: playerId,
+        },
+      });
+      if (exists) {
+        await Friend.destroy({
+          where: {
+            playerId: playerId,
+          },
+        });
+      }
+
+      let waitingFriend = await Friend.create({
+        playerId: playerId,
+        socketId: socket.id,
+        roomName: `room#${socket.id}`,
+        code: uniqueCode(),
+      });
+
+      waitingFriend = waitingFriend?.dataValues;
+
+      socket.join(`room#${socket.id}`);
+      console.log("waitingFriend : ", waitingFriend);
+      socket.emit("askToEnterCode", waitingFriend.code);
+    });
+
+    //join room
+    socket.on("joinRoom", async ({ code, playerId }) => {
+      code = Number(code);
+      console.log("code : ", code);
+
+      let waitingFriend = await Friend.findOne({
+        where: {
+          code: code,
+        },
+      });
+
+      console.log("waitingFriend : ", waitingFriend);
+
+      waitingFriend = waitingFriend?.dataValues;
+
+      if (!waitingFriend) {
+        return socket.emit("invalidCode", "Invalid code");
+      }
+      await Friend.destroy({
+        where: {
+          code: code,
+        },
+      });
+      socket.join(waitingFriend.roomName);
+
+      let player1 = await Player.findOne({
+        where: {
+          id: playerId,
+        },
+      });
+
+      let player2 = await Player.findOne({
+        where: {
+          id: waitingFriend.playerId,
+        },
+      });
+
+      if (!player1 || !player2) {
+        return socket.emit("error", "Player not found!!! invalid player id");
+      }
+
+      player1 = player1?.dataValues;
+      player2 = player2?.dataValues;
+
+      // console.log("player1 : ", player1);
+      // console.log("player2 : ", player2);
+      const color = Math.floor(Math.random() * 2) === 0 ? "white" : "black";
+      player1.color = color;
+      player2.color = color === "white" ? "black" : "white"; 
+
+      io.to(waitingFriend.roomName).emit("startTheGame", {
+        player1,
+        player2,
+        roomName: waitingFriend.roomName,
+      });
     });
 
     //playersInfo when the match starts roomName player1 are candidate keys. player1 is you.
@@ -388,6 +477,11 @@ export const SocketHandler = (server) => {
       console.log("userDisconnected : ", playerId);
 
       await Waiting.destroy({
+        where: {
+          playerId: playerId,
+        },
+      });
+      await Friend.destroy({
         where: {
           playerId: playerId,
         },

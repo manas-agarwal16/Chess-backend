@@ -16,13 +16,18 @@ export default (sequelize) => {
           model: "players",
           key: "id",
         },
+        unique: true,
       },
       socketId: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      code: {
+      roomName: {
         type: DataTypes.STRING,
+        allowNull: false,
+      },
+      code: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
     },
