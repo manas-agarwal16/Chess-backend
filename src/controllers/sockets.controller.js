@@ -88,7 +88,12 @@ export const SocketHandler = (server) => {
 
         console.log("game started");
 
-        io.to(roomName).emit("startTheGame", { player1, player2, roomName });
+        io.to(roomName).emit("startTheGame", {
+          player1,
+          player2,
+          roomName,
+          todoId: player1.id
+        });
       } else {
         const roomName = `room#${socket.id}`;
         socket.join(roomName);
@@ -185,7 +190,7 @@ export const SocketHandler = (server) => {
       // console.log("player2 : ", player2);
       const color = Math.floor(Math.random() * 2) === 0 ? "white" : "black";
       player1.color = color;
-      player2.color = color === "white" ? "black" : "white"; 
+      player2.color = color === "white" ? "black" : "white";
 
       io.to(waitingFriend.roomName).emit("startTheGame", {
         player1,
@@ -472,12 +477,12 @@ export const SocketHandler = (server) => {
       });
     });
 
-    socket.on('resignGame', async ({roomName , playerId}) => {
-      console.log('resign Game');
-      console.log('playerId : ', playerId);
-      
-      io.to(roomName).emit('resignedGame', {roomName , playerId});
-    })
+    socket.on("resignGame", async ({ roomName, playerId }) => {
+      console.log("resign Game");
+      console.log("playerId : ", playerId);
+
+      io.to(roomName).emit("resignedGame", { roomName, playerId });
+    });
 
     //user disconnected
     socket.on("userDisconnected", async (playerId) => {
