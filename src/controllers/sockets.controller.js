@@ -196,6 +196,7 @@ export const SocketHandler = (server) => {
         player1,
         player2,
         roomName: waitingFriend.roomName,
+        todoId: player1.id
       });
     });
 
