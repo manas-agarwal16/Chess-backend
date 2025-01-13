@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { Waiting, Player, Game } from "../models/index.js";
 import { Chess } from "chess.js";
 import { Op, where } from "sequelize";
-import { wFactor, lFactor } from "../utils/kFactor.js";
+import { wFactor, lFactor } from "../utils/Factors.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
@@ -99,6 +99,10 @@ export const SocketHandler = (server) => {
 
         socket.emit("WaitingForAPlayer", roomName);
       }
+    });
+
+    socket.on('playWithFriendCreate', async (playerId) => {
+      await Friend
     });
 
     //playersInfo when the match starts roomName player1 are candidate keys. player1 is you.
@@ -208,7 +212,7 @@ export const SocketHandler = (server) => {
       io.to(data.roomName).emit("makeMove", data.position);
     });
 
-    //checkmate and rating calculations.
+    //checkmate and rating calculations. if won raiting + wFactor * (opp / you) if loose raiting - lFactor * (you / opp);
     socket.on("checkmate", async ({ roomName, winnerId, losserId }) => {
       console.log("checkmate : ", roomName, winnerId, losserId);
 
@@ -240,7 +244,7 @@ export const SocketHandler = (server) => {
         player2RatingAfter =
           player2RatingBefore -
           lFactor(player2RatingBefore) *
-            (player1RatingBefore / player2RatingBefore);
+            (player2RatingBefore / player1RatingBefore);
       } else {
         player2RatingAfter =
           player2RatingBefore +
@@ -248,9 +252,9 @@ export const SocketHandler = (server) => {
             (player1RatingBefore / player2RatingBefore);
 
         player1RatingAfter =
-          player1RatingBefore +
+          player1RatingBefore -
           lFactor(player1RatingBefore) *
-            (player2RatingBefore / player1RatingBefore);
+            (player1RatingBefore / player2RatingBefore);
       }
 
       player1RatingAfter = Math.floor(player1RatingAfter);
@@ -303,7 +307,7 @@ export const SocketHandler = (server) => {
       });
     });
 
-    //draw and rating calculations.
+    //draw and rating calculations. for draw raiting + (opp - you) / 5;
     socket.on("draw", async ({ roomName }) => {
       let playedGame = await Game.findOne({
         where: {

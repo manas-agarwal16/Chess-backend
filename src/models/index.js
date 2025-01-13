@@ -27,7 +27,7 @@ import WaitingsModels from "./waitings.models.js";
 import GameModel from "./games.models.js";
 import AudioModel from "./audios.models.js";
 import OTPModel from "./otps.models.js";
-// import GameStateModel from "./gameStates.models.js";
+import FriendsModel from "./friends.models.js";
 
 //Initializing Sequelize Models
 const Player = PlayerModel(sequelize);
@@ -36,7 +36,7 @@ const Waiting = WaitingsModels(sequelize);
 const Rating = RatingModel(sequelize);
 const Audio = AudioModel(sequelize);
 const OTP = OTPModel(sequelize);
-// const GameState = GameStateModel(sequelize);
+const Friend = FriendsModel(sequelize);
 //Associations
 
 //player Game one to many
@@ -44,7 +44,6 @@ Player.hasMany(Game, { foreignKey: "player1Id", as: "GameAsPlayer1" });
 Player.hasMany(Game, { foreignKey: "player2Id", as: "GamesAsPlayer2" });
 Player.hasMany(Game, { foreignKey: "winnerId", as: "AsWinner" });
 Player.hasMany(Game, { foreignKey: "losserId", as: "AsLosser" });
-
 Game.belongsTo(Player, { foreignKey: "player1Id", as: "Player1" });
 Game.belongsTo(Player, { foreignKey: "player2Id", as: "Player2" });
 Game.belongsTo(Player, { foreignKey: "winnerId", as: "Winner" });
@@ -71,15 +70,9 @@ Audio.belongsTo(Player, { foreignKey: "player2Id", as: "Player2Details" });
 Game.hasOne(Audio, { foreignKey: "gameId", as: "GameAudio" });
 Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 
-//players to GameState one to one
-// Player.hasOne(GameState, { foreignKey: "player1Id", as: "Player1GameState" });
-// Player.hasOne(GameState, { foreignKey: "player2Id", as: "Player2GameState" });
-// Player.hasOne(GameState, { foreignKey: "winnerId", as: "Winner" });
-// Player.hasOne(GameState, { foreignKey: "losserId", as: "Losser" });
-// GameState.belongsTo(Player, { foreignKey: "player1Id", as: "Player1Details" });
-// GameState.belongsTo(Player, { foreignKey: "player2Id", as: "Player2Details" });
-// GameState.belongsTo(Player, { foreignKey: "winnerId", as: "WinnerDetails" });
-// GameState.belongsTo(Player, { foreignKey: "losserId", as: "LosserDetails" });
+//Player to Friend one to one
+Player.hasOne(Friend, { foreignKey: "playerId", as: "WaitingFriend" });
+Friend.hasOne(Player, { foreignKey: "playerId", as: "WaitingFriendDetails" });
 
 const syncDB = async () => {
   try {
@@ -90,14 +83,4 @@ const syncDB = async () => {
   }
 };
 
-export {
-  sequelize,
-  Player,
-  Game,
-  Waiting,
-  Rating,
-  Audio,
-  OTP,
-  // GameState,
-  syncDB,
-};
+export { sequelize, Player, Game, Waiting, Rating, Audio, OTP, Friend, syncDB };
