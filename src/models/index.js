@@ -72,7 +72,7 @@ Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 
 //Player to Friend one to one
 Player.hasOne(Friend, { foreignKey: "playerId", as: "WaitingFriend" });
-Friend.hasOne(Player, { foreignKey: "playerId", as: "WaitingFriendDetails" });
+Friend.belongsTo(Player, { foreignKey: "playerId", as: "WaitingFriendDetails" });
 
 const syncDB = async () => {
   try {
