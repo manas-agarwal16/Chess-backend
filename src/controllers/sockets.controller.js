@@ -92,7 +92,7 @@ export const SocketHandler = (server) => {
           player1,
           player2,
           roomName,
-          todoId: player1.id
+          todoId: player1.id,
         });
       } else {
         const roomName = `room#${socket.id}`;
@@ -115,6 +115,10 @@ export const SocketHandler = (server) => {
 
     //create room for friend
     socket.on("createRoom", async (playerId) => {
+      if (!playerId) {
+        socket.emit("error", "playerId is required");
+        return;
+      }
       const exists = await Friend.findOne({
         where: {
           playerId: playerId,
@@ -144,6 +148,10 @@ export const SocketHandler = (server) => {
 
     //join room
     socket.on("joinRoom", async ({ code, playerId }) => {
+      if (!playerId) {
+        socket.emit("error", "playerId is required");
+        return;
+      }
       code = Number(code);
       console.log("code : ", code);
 
@@ -196,8 +204,13 @@ export const SocketHandler = (server) => {
         player1,
         player2,
         roomName: waitingFriend.roomName,
-        todoId: player1.id
+        todoId: player1.id,
       });
+    });
+
+    socket.on("updateTodoId", ({ id, roomName }) => {
+      console.log("updateTodoId : ", id);
+      io.to(roomName).emit("updateTodoIdFromBackend", id);
     });
 
     //playersInfo when the match starts roomName player1 are candidate keys. player1 is you.
