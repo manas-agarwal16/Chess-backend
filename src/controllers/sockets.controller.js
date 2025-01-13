@@ -236,7 +236,7 @@ export const SocketHandler = (server) => {
                 "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
               ],
             });
-            console.log("newGame: ", newGame?.dataValues);
+            // console.log("newGame: ", newGame?.dataValues);
           } else {
             console.log("only unique roomName is allowed");
           }
@@ -248,7 +248,7 @@ export const SocketHandler = (server) => {
 
     //new chess position
     socket.on("newChessPosition", async (data) => {
-      console.log("newChessPosition : ", data);
+      // console.log("newChessPosition : ", data);
 
       // let exists = await Game.findOne({
       //   where: {
@@ -281,7 +281,7 @@ export const SocketHandler = (server) => {
         return;
       }
 
-      console.log("pastHistory : ", pastHistory);
+      // console.log("pastHistory : ", pastHistory);
       pastHistory = pastHistory?.dataValues?.history;
 
       let updatedBoard = await Game.update(
@@ -296,7 +296,7 @@ export const SocketHandler = (server) => {
         }
       );
 
-      console.log("updatedBoard : ", updatedBoard);
+      // console.log("updatedBoard : ", updatedBoard);
 
       io.to(data.roomName).emit("makeMove", data.position);
     });
@@ -317,7 +317,7 @@ export const SocketHandler = (server) => {
       }
 
       playedGame = playedGame?.dataValues;
-      console.log("playedGame : ", playedGame);
+      // console.log("playedGame : ", playedGame);
 
       const player1RatingBefore = playedGame.player1RatingBefore;
       const player2RatingBefore = playedGame.player2RatingBefore;
@@ -349,8 +349,8 @@ export const SocketHandler = (server) => {
       player1RatingAfter = Math.floor(player1RatingAfter);
       player2RatingAfter = Math.floor(player2RatingAfter);
 
-      console.log("player1RatingAfter: ", player1RatingAfter);
-      console.log("player2RatingAfter: ", player2RatingAfter);
+      // console.log("player1RatingAfter: ", player1RatingAfter);
+      // console.log("player2RatingAfter: ", player2RatingAfter);
       await Game.update(
         {
           winnerId: winnerId,
@@ -386,7 +386,7 @@ export const SocketHandler = (server) => {
           },
         }
       );
-      socket.emit("itsCheckmate", {
+      io.to(roomName).emit("itsCheckmate", {
         player1RatingBefore,
         player1RatingAfter,
         player2RatingBefore,
@@ -471,6 +471,13 @@ export const SocketHandler = (server) => {
         player2Id: playedGame.player2Id,
       });
     });
+
+    socket.on('resignGame', async ({roomName , playerId}) => {
+      console.log('resign Game');
+      console.log('playerId : ', playerId);
+      
+      io.to(roomName).emit('resignedGame', {roomName , playerId});
+    })
 
     //user disconnected
     socket.on("userDisconnected", async (playerId) => {

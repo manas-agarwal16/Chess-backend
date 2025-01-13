@@ -335,7 +335,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .json(new ApiResponse(401, "", "Invalid refreshToken"));
   }
 
-  const newAccessToken = await player.generateAccessToken(player);
+  const newAccessToken = await generateAccessToken(player);
   if (!newAccessToken) {
     return res
       .status(501)
