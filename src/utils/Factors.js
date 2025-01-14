@@ -1,4 +1,5 @@
 export const wFactor = (rating) => {
+  if(rating <= 1199) return 70;
   if (rating >= 1200 && rating <= 1249) return 60;
   if (rating >= 1250 && rating <= 1299) return 50;
   if (rating >= 1300 && rating <= 1349) return 40;
@@ -13,6 +14,7 @@ export const wFactor = (rating) => {
 };
 
 export const lFactor = (rating) => {
+  if(rating <= 1199) return 5;
   if (rating >= 1200 && rating <= 1250) return 10;
   if (rating >= 1251 && rating <= 1299) return 20;
   if (rating >= 1300 && rating <= 1349) return 30;

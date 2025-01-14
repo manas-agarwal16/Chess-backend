@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { OTP, Player } from "../models/index.js";
+import { Game, OTP, Player, sequelize } from "../models/index.js";
 import { generateOTP, sendOTPThroughEmail } from "../utils/otp_generator.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 //clear
 const register = asyncHandler(async (req, res) => {
   let { handle, email, password, avatarURL } = req.body;
+  console.log("register avatarURL", avatarURL);
   if (!handle || !email || !password) {
     return res
       .status(400)
@@ -52,8 +53,8 @@ const register = asyncHandler(async (req, res) => {
 
   const otpPlayer = await OTP.create({
     OTP: otp,
-    handle,
-    email,
+    handle: handle.toLowerCase(),
+    email: email.toLowerCase(),
     password,
     avatar: avatarURL,
   });
@@ -82,10 +83,14 @@ const register = asyncHandler(async (req, res) => {
 //clear
 const verifyOTP = asyncHandler(async (req, res) => {
   let { email, otp } = req.body;
+  email = email.toLowerCase();
+  console.log("verifyOTP email", email, "otp", otp);
 
   const alreadyExists = await Player.findOne({
     where: {
-      email,
+      email: {
+        [Op.iLike]: email,
+      },
     },
   });
 
@@ -110,7 +115,9 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
   const otpDb = await OTP.findOne({
     where: {
-      email,
+      email: {
+        [Op.iLike]: email,
+      },
     },
   });
   if (!otpDb) {
@@ -139,13 +146,16 @@ const verifyOTP = asyncHandler(async (req, res) => {
     email: otpDb.email,
     password: encrptedPassword,
     avatar: otpDb.avatar,
+    rating: 1200,
   });
 
   // console.log("player", player);
 
   await OTP.destroy({
     where: {
-      email,
+      email: {
+        [Op.iLike]: email,
+      },
     },
   });
 
@@ -165,7 +175,7 @@ const resendOTP = asyncHandler(async (req, res) => {
   const { email } = req.params;
   // console.log("email : ", email);
 
-  const player = await OTP.findOne({ where: { email } });
+  const player = await OTP.findOne({ where: { [Op.iLike]: email } });
 
   if (!player) {
     return res
@@ -175,7 +185,10 @@ const resendOTP = asyncHandler(async (req, res) => {
 
   const otp = generateOTP();
 
-  const updateOTP = await OTP.update({ OTP: otp }, { where: { email } });
+  const updateOTP = await OTP.update(
+    { OTP: otp },
+    { where: { [Op.iLike]: email } }
+  );
   // console.log("updateOTP", updateOTP);
 
   if (!updateOTP) {
@@ -302,10 +315,11 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   console.log("decodedIncomingRefreshToken : ", decodedIncomingRefreshToken);
 
-  if(!decodedIncomingRefreshToken.id){
-    return res.status(401).json(new ApiResponse(401, "", "Invalid refreshToken"));
+  if (!decodedIncomingRefreshToken.id) {
+    return res
+      .status(401)
+      .json(new ApiResponse(401, "", "Invalid refreshToken"));
   }
-  
 
   let player = await Player.findOne({
     where: {
@@ -400,7 +414,7 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
       },
     });
 
-    player = player.dataValues;
+    player = player?.dataValues;
 
     // console.log("player : ", player);
 
@@ -482,6 +496,154 @@ const logout = asyncHandler(async (req, res) => {
     );
 });
 
+const fetchPlayerRating = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  // console.log("id", id);
+  if (!id) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "", "Please provide player id"));
+  }
+  try {
+    let data = await Player.findOne({
+      where: {
+        id: id,
+      },
+    });
+    console.log("data", data);
+    data = data?.dataValues?.rating;
+
+    return res.status(200).json(new ApiResponse(200, data, "Player rating"));
+  } catch (error) {
+    console.error("Error in fetching player rating", error);
+    return res.status(501).json(new ApiResponse(501, "", "Error in fetching"));
+  }
+});
+
+const playerProfile = asyncHandler(async (req, res) => {
+  console.log("in playerProfile");
+  const { handle } = req.params;
+  console.log("handle", handle);
+  try {
+    let playerData = await Player.findOne({
+      attributes: { exclude: ["password", "refreshToken", "updatedAt"] },
+      where: {
+        handle: {
+          [Op.iLike]: handle,
+        },
+      },
+    });
+    if (!playerData) {
+      return res.status(404).json(new ApiResponse(404, "", "Player not found"));
+    }
+    playerData = playerData?.dataValues;
+    console.log("playerData", playerData);
+
+    let matchesData = await Game.findAll({
+      attributes: [
+        "id",
+        "roomName",
+        "gameStatus",
+        "player1Id",
+        "player2Id",
+        "player1RatingBefore",
+        "player2RatingBefore",
+        "player1RatingAfter",
+        "player2RatingAfter",
+        "player1Color",
+        "player2Color",
+        [
+          sequelize.literal(`
+            CASE
+              WHEN "Game"."winnerId" = ${playerData.id} THEN 'Won'
+              WHEN "Game"."losserId" = ${playerData.id} THEN 'Lost'
+              WHEN "Game"."gameStatus" = 'on-going' THEN 'Pending'
+              ELSE 'Draw'
+            END
+          `),
+          "Result",
+        ],
+      ],
+      where: {
+        [Op.or]: [{ player1Id: playerData.id }, { player2Id: playerData.id }],
+      },
+      order: [["id", "DESC"]],
+    });
+
+    matchesData = matchesData.map((match) => match.dataValues);
+
+    let opponentHandle = await Player.findOne({
+      attributes: ["handle"],
+      where: {
+        id:
+          playerData.id === matchesData[0].player1Id
+            ? matchesData[0].player2Id
+            : matchesData[0].player1Id,
+      },
+    });
+    opponentHandle = opponentHandle?.dataValues?.handle;
+
+    console.log("matchesData: ", matchesData);
+    let matches = await Promise.all(
+      matchesData.map(async (match) => {
+        let data = {};
+        data.opponentHandle = opponentHandle;
+        data.opponentRatingBefore =
+          playerData.id === match.player1Id
+            ? match.player2RatingBefore
+            : match.player1RatingBefore;
+        data.opponentRatingAfter =
+          playerData.id === match.player1Id
+            ? match.player2RatingAfter ?? "pending"
+            : match.player1RatingAfter ?? "pending";
+        data.opponentColor =
+          playerData.id === match.player1Id
+            ? match.player2Color
+            : match.player1Color;
+        data.result = match.Result;
+        data.status = match.gameStatus;
+        data.id = match.id;
+        data.roomName = match.roomName;
+        data.playerColor =
+          playerData.id === match.player1Id
+            ? match.player1Color
+            : match.player2Color;
+        data.playerRatingBefore =
+          playerData.id === match.player1Id
+            ? match.player1RatingBefore
+            : match.player2RatingBefore;
+        data.playerRatingAfter =
+          playerData.id === match.player1Id
+            ? match.player1RatingAfter ?? "pending"
+            : match.player2RatingAfter ?? "pending";
+        return data;
+      })
+    );
+
+    return res.status(201).json(
+      new ApiResponse(
+        201,
+        {
+          id: playerData.id,
+          rating: playerData.rating,
+          email: playerData.email,
+          handle: playerData.handle,
+          avatar: playerData.avatar,
+          matches: matches,
+          registered: playerData.createdAt,
+        },
+        "Player profile"
+      )
+    );
+  } catch (error) {
+    console.log("error in fetching player profile", error);
+
+    return res
+      .status(501)
+      .json(new ApiResponse(501, "", "Error fetching player profile"));
+  }
+});
+
 export {
   register,
   verifyOTP,
@@ -490,4 +652,6 @@ export {
   refreshAccessToken,
   logout,
   getCurrentPlayer,
+  fetchPlayerRating,
+  playerProfile,
 };

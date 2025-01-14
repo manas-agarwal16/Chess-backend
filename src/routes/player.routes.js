@@ -7,6 +7,8 @@ import {
   refreshAccessToken,
   getCurrentPlayer,
   logout,
+  fetchPlayerRating,
+  playerProfile,
 } from "../controllers/player.controller.js";
 
 import { verifyJWT } from "../utils/verifyJWT.js";
@@ -20,5 +22,7 @@ router.route("/login").post(login);
 router.route("/refresh-access-token").get(refreshAccessToken);
 router.route("/get-current-player").get(getCurrentPlayer);
 router.route("/logout").get(verifyJWT, logout);
+router.route("/fetch-player-rating/:id").get(fetchPlayerRating);
+router.route("/profile/:handle").get(playerProfile);
 
 export default router;

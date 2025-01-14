@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { Waiting, Player, Game, Friend } from "../models/index.js";
 import { Chess } from "chess.js";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 import { uniqueCode } from "../utils/uniqueCode.js";
 import { wFactor, lFactor } from "../utils/Factors.js";
 
@@ -24,6 +24,20 @@ export const SocketHandler = (server) => {
       console.log("playerId socketId : ", playerId, socket.id);
       if (!playerId) {
         return socket.emit("error", "Player not found!!! invalid player id");
+      }
+
+      let exists = await Waiting.findOne({
+        where: {
+          playerId: playerId,
+        },
+      });
+
+      if (exists) {
+        await Waiting.destroy({
+          where: {
+            playerId: playerId,
+          },
+        });
       }
 
       let waitingPlayer = await Waiting.findOne({
@@ -119,18 +133,20 @@ export const SocketHandler = (server) => {
         socket.emit("error", "playerId is required");
         return;
       }
-      const exists = await Friend.findOne({
-        where: {
-          playerId: playerId,
-        },
-      });
-      if (exists) {
-        await Friend.destroy({
+      setTimeout(async () => {
+        const exists = await Friend.findOne({
           where: {
             playerId: playerId,
           },
         });
-      }
+        if (exists) {
+          await Friend.destroy({
+            where: {
+              playerId: playerId,
+            },
+          });
+        }
+      }, 400);
 
       let waitingFriend = await Friend.create({
         playerId: playerId,
@@ -336,7 +352,7 @@ export const SocketHandler = (server) => {
       }
 
       playedGame = playedGame?.dataValues;
-      // console.log("playedGame : ", playedGame);
+      console.log("playedGame : ", playedGame);
 
       const player1RatingBefore = playedGame.player1RatingBefore;
       const player2RatingBefore = playedGame.player2RatingBefore;
@@ -368,8 +384,10 @@ export const SocketHandler = (server) => {
       player1RatingAfter = Math.floor(player1RatingAfter);
       player2RatingAfter = Math.floor(player2RatingAfter);
 
-      // console.log("player1RatingAfter: ", player1RatingAfter);
-      // console.log("player2RatingAfter: ", player2RatingAfter);
+      console.log("player1RatingBefore: ", player1RatingBefore);
+      console.log("player2RatingBefore: ", player2RatingBefore);
+      console.log("player1RatingAfter: ", player1RatingAfter);
+      console.log("player2RatingAfter: ", player2RatingAfter);
       await Game.update(
         {
           winnerId: winnerId,
@@ -512,6 +530,10 @@ export const SocketHandler = (server) => {
           playerId: playerId,
         },
       });
+      socket.emit(
+        "userDisconnectedSuccessfully",
+        "user disconnected successfully"
+      );
     });
   });
 

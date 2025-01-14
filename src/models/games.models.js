@@ -70,11 +70,11 @@ export default (sequelize) => {
       },
       player1RatingAfter: {
         type: DataTypes.INTEGER,
-        defaultValue: 1200,
+        defaultValue: null,
       },
       player2RatingAfter: {
         type: DataTypes.INTEGER,
-        defaultValue: 1200,
+        defaultValue: null,
       },
       gameStatus: {
         type: DataTypes.STRING,

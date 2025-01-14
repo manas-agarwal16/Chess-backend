@@ -12,7 +12,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
-    console.log("token : ", token);
+    // console.log("token : ", token);
 
     if (!token) {
       return res
@@ -22,7 +22,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
 
     // Decode the token
     const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_KEY);
-    console.log("decodedToken : ", decodedToken);
+    // console.log("decodedToken : ", decodedToken);
     
     if (!decodedToken) {
       return res
@@ -54,7 +54,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     req.player = player; // Attach player to request
     next(); // Proceed to next middleware
   } catch (error) {
-    console.log("error here : ", error);
+    console.log("error in verifyWT : ", error);
 
     if (error.name === "TokenExpiredError") {
       return res
