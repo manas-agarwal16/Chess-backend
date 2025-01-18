@@ -241,16 +241,16 @@ export const SocketHandler = (server) => {
         player1Color,
         player2Color,
       }) => {
-        console.log(
-          "playersInfo : ",
-          roomName,
-          player1Id,
-          player2Id,
-          player1RatingBefore,
-          player2RatingBefore,
-          player1Color,
-          player2Color
-        );
+        // console.log(
+        //   "playersInfo : ",
+        //   roomName,
+        //   player1Id,
+        //   player2Id,
+        //   player1RatingBefore,
+        //   player2RatingBefore,
+        //   player1Color,
+        //   player2Color
+        // );
 
         let exists = await Game.findOne({
           where: {
@@ -352,7 +352,7 @@ export const SocketHandler = (server) => {
       }
 
       playedGame = playedGame?.dataValues;
-      console.log("playedGame : ", playedGame);
+      // console.log("playedGame : ", playedGame);
 
       const player1RatingBefore = playedGame.player1RatingBefore;
       const player2RatingBefore = playedGame.player2RatingBefore;
@@ -384,10 +384,10 @@ export const SocketHandler = (server) => {
       player1RatingAfter = Math.floor(player1RatingAfter);
       player2RatingAfter = Math.floor(player2RatingAfter);
 
-      console.log("player1RatingBefore: ", player1RatingBefore);
-      console.log("player2RatingBefore: ", player2RatingBefore);
-      console.log("player1RatingAfter: ", player1RatingAfter);
-      console.log("player2RatingAfter: ", player2RatingAfter);
+      // console.log("player1RatingBefore: ", player1RatingBefore);
+      // console.log("player2RatingBefore: ", player2RatingBefore);
+      // console.log("player1RatingAfter: ", player1RatingAfter);
+      // console.log("player2RatingAfter: ", player2RatingAfter);
       await Game.update(
         {
           winnerId: winnerId,
@@ -511,13 +511,13 @@ export const SocketHandler = (server) => {
 
     socket.on("resignGame", async ({ roomName, playerId }) => {
       console.log("resign Game");
-      console.log("playerId : ", playerId);
+      console.log("roomName playerId : ", roomName, playerId);
 
       io.to(roomName).emit("resignedGame", { roomName, playerId });
     });
 
     //user disconnected
-    socket.on("userDisconnected", async (playerId) => {
+    socket.on("userDisconnected", async ({ playerId, roomName }) => {
       console.log("userDisconnected : ", playerId);
 
       await Waiting.destroy({
@@ -530,10 +530,20 @@ export const SocketHandler = (server) => {
           playerId: playerId,
         },
       });
-      socket.emit(
-        "userDisconnectedSuccessfully",
-        "user disconnected successfully"
-      );
+      io.to(roomName).emit("userDisconnectedSuccessfully", playerId);
+    });
+
+    socket.on("gameOverClearWaitings", async (playerId) => {
+      await Waiting.destroy({
+        where: {
+          playerId: playerId,
+        },
+      });
+      await Friend.destroy({
+        where: {
+          playerId: playerId,
+        },
+      });
     });
   });
 

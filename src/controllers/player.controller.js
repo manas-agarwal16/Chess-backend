@@ -384,7 +384,7 @@ const getCurrentPlayer = asyncHandler(async (req, res) => {
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
-    console.log("token : ", token);
+    // console.log("token : ", token);
 
     if (!token) {
       return res
@@ -506,11 +506,12 @@ const fetchPlayerRating = asyncHandler(async (req, res) => {
   }
   try {
     let data = await Player.findOne({
+      attributes: ["rating"],
       where: {
         id: id,
       },
     });
-    console.log("data", data);
+    // console.log("data", data);
     data = data?.dataValues?.rating;
 
     return res.status(200).json(new ApiResponse(200, data, "Player rating"));
@@ -523,6 +524,9 @@ const fetchPlayerRating = asyncHandler(async (req, res) => {
 const playerProfile = asyncHandler(async (req, res) => {
   console.log("in playerProfile");
   const { handle } = req.params;
+  const { page } = req.query;
+  console.log("page", page);
+  
   console.log("handle", handle);
   try {
     let playerData = await Player.findOne({
@@ -537,7 +541,7 @@ const playerProfile = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, "", "Player not found"));
     }
     playerData = playerData?.dataValues;
-    console.log("playerData", playerData);
+    // console.log("playerData", playerData);
 
     let matchesData = await Game.findAll({
       attributes: [
@@ -568,24 +572,25 @@ const playerProfile = asyncHandler(async (req, res) => {
         [Op.or]: [{ player1Id: playerData.id }, { player2Id: playerData.id }],
       },
       order: [["id", "DESC"]],
+      offset: (page - 1) * 5,
+      limit: 5,
     });
 
     matchesData = matchesData.map((match) => match.dataValues);
 
-    let opponentHandle = await Player.findOne({
-      attributes: ["handle"],
-      where: {
-        id:
-          playerData.id === matchesData[0].player1Id
-            ? matchesData[0].player2Id
-            : matchesData[0].player1Id,
-      },
-    });
-    opponentHandle = opponentHandle?.dataValues?.handle;
-
     console.log("matchesData: ", matchesData);
     let matches = await Promise.all(
       matchesData.map(async (match) => {
+        let opponentHandle = await Player.findOne({
+          attributes: ["handle"],
+          where: {
+            id:
+              playerData.id === match.player1Id
+                ? match.player2Id
+                : match.player1Id,
+          },
+        });
+        opponentHandle = opponentHandle?.dataValues?.handle;
         let data = {};
         data.opponentHandle = opponentHandle;
         data.opponentRatingBefore =
@@ -594,8 +599,8 @@ const playerProfile = asyncHandler(async (req, res) => {
             : match.player1RatingBefore;
         data.opponentRatingAfter =
           playerData.id === match.player1Id
-            ? match.player2RatingAfter ?? "pending"
-            : match.player1RatingAfter ?? "pending";
+            ? match.player2RatingAfter ?? "PENDING"
+            : match.player1RatingAfter ?? "PENDING";
         data.opponentColor =
           playerData.id === match.player1Id
             ? match.player2Color
