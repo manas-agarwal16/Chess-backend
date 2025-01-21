@@ -522,11 +522,11 @@ const fetchPlayerRating = asyncHandler(async (req, res) => {
 });
 
 const playerProfile = asyncHandler(async (req, res) => {
-  console.log("in playerProfile");
+  // console.log("in playerProfile");
   const { handle } = req.params;
   const { page } = req.query;
-  console.log("page", page);
-  
+  // console.log("page", page);
+
   console.log("handle", handle);
   try {
     let playerData = await Player.findOne({
@@ -649,6 +649,56 @@ const playerProfile = asyncHandler(async (req, res) => {
   }
 });
 
+const viewMatch = asyncHandler(async (req, res) => {
+  const { matchId, playerId } = req.params;
+  console.log("matchId", matchId, "playerId", playerId);
+
+  if (!matchId || !playerId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "", "Please provide matchId and playerId"));
+  }
+
+  const match = await Game.findOne({
+    attributes: [
+      "history",
+      [
+        sequelize.literal(`
+        CASE
+          WHEN "Game"."winnerId" = ${playerId} THEN 'WON'
+          WHEN "Game"."losserId" = ${playerId} THEN 'LOST'
+          ELSE 'DRAW'
+          END
+      `),
+        "result",
+      ],
+      [
+        sequelize.literal(`
+          CASE 
+          WHEN "Game"."player1Id" = ${playerId} THEN "Game"."player1Color"
+          ELSE "Game"."player2Color"
+          END
+          `),
+        "color",
+      ],
+    ],
+    where: {
+      id: matchId,
+      [Op.or]: [{ player1Id: playerId }, { player2Id: playerId }],
+    },
+  });
+
+  console.log("match: ", match);
+
+  if (!match) {
+    return res.status(400).json(new ApiResponse(404, "", "Match not found"));
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, match, "Match fetched successfully"));
+});
+
 export {
   register,
   verifyOTP,
@@ -659,4 +709,5 @@ export {
   getCurrentPlayer,
   fetchPlayerRating,
   playerProfile,
+  viewMatch
 };
