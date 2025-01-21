@@ -3,6 +3,7 @@ import { Waiting, Player, Game, Friend } from "../models/index.js";
 import { Chess } from "chess.js";
 import { Op, where } from "sequelize";
 import { uniqueCode } from "../utils/uniqueCode.js";
+import { formattedDate } from "../utils/formattedDate.js";
 import { wFactor, lFactor } from "../utils/Factors.js";
 
 //game.fen() -> for current state of the chess board , return a string,
@@ -283,29 +284,6 @@ export const SocketHandler = (server) => {
 
     //new chess position
     socket.on("newChessPosition", async (data) => {
-      // console.log("newChessPosition : ", data);
-
-      // let exists = await Game.findOne({
-      //   where: {
-      //     roomName: data.roomName,
-      //   },
-      // });
-
-      // if (!exists) {
-      // let exists = await Game.create({
-      //   roomName: data.roomName,
-      //   player1Id: data.player1Id,
-      //   player2Id: data.player2Id,
-      //   history: ["rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"],
-      //   player1Color: data.player1Color,
-      //   player2Color: data.player2Color,
-      // });
-      // }
-
-      // exists = exists?.dataValues;
-
-      // console.log("exists : ", exists);
-
       let pastHistory = await Game.findOne({
         where: {
           roomName: data.roomName,
@@ -384,10 +362,9 @@ export const SocketHandler = (server) => {
       player1RatingAfter = Math.floor(player1RatingAfter);
       player2RatingAfter = Math.floor(player2RatingAfter);
 
-      // console.log("player1RatingBefore: ", player1RatingBefore);
-      // console.log("player2RatingBefore: ", player2RatingBefore);
-      // console.log("player1RatingAfter: ", player1RatingAfter);
-      // console.log("player2RatingAfter: ", player2RatingAfter);
+      player1RatingAfter = Math.max(player1RatingAfter, 1200);
+      player2RatingAfter = Math.max(player2RatingAfter, 1200);
+
       await Game.update(
         {
           winnerId: winnerId,
@@ -402,9 +379,28 @@ export const SocketHandler = (server) => {
           },
         }
       );
+
+      let ratingHistory = await Player.findOne({
+        attributes: ["ratingHistory"],
+        where: {
+          id: playedGame.player1Id,
+        },
+      });
+      // console.log("ratingHistory : ", ratingHistory);
+      ratingHistory = ratingHistory?.dataValues.ratingHistory;
+
+      if (ratingHistory.length === 10) {
+        ratingHistory.shift();
+      }
+      ratingHistory = [
+        ...ratingHistory,
+        { rating: player1RatingAfter, date: formattedDate() },
+      ];
+      console.log("ratingHistory : ", ratingHistory);
       await Player.update(
         {
           rating: player1RatingAfter,
+          ratingHistory,
         },
         {
           where: {
@@ -413,9 +409,29 @@ export const SocketHandler = (server) => {
         }
       );
 
+      ratingHistory = await Player.findOne({
+        attributes: ["ratingHistory"],
+        where: {
+          id: playedGame.player2Id,
+        },
+      });
+
+      // console.log("ratingHistory : ", ratingHistory);
+      ratingHistory = ratingHistory?.dataValues?.ratingHistory;
+
+      if (ratingHistory.length === 10) {
+        ratingHistory.shift();
+      }
+
+      ratingHistory = [
+        ...ratingHistory,
+        { rating: player2RatingAfter, date: formattedDate() },
+      ];
+
       await Player.update(
         {
           rating: player2RatingAfter,
+          ratingHistory,
         },
         {
           where: {
@@ -423,6 +439,7 @@ export const SocketHandler = (server) => {
           },
         }
       );
+
       io.to(roomName).emit("itsCheckmate", {
         player1RatingBefore,
         player1RatingAfter,
@@ -461,12 +478,12 @@ export const SocketHandler = (server) => {
       player1RatingAfter = Math.ceil(player1RatingAfter);
       player2RatingAfter = Math.ceil(player2RatingAfter);
 
-      console.log("player1RatingAfter: ", player1RatingAfter);
-      console.log("player2RatingAfter: ", player2RatingAfter);
+      player1RatingAfter = Math.max(player1RatingAfter, 1200);
+      player2RatingAfter = Math.max(player2RatingAfter, 1200);
+
       await Game.update(
         {
-          winnerId: winnerId,
-          losserId: losserId,
+          draw: true,
           gameStatus: "finished",
           player1RatingAfter: player1RatingAfter,
           player2RatingAfter: player2RatingAfter,
@@ -478,9 +495,27 @@ export const SocketHandler = (server) => {
         }
       );
 
+      let ratingHistory = await Player.findOne({
+        attributes: ["ratingHistory"],
+        where: {
+          id: playedGame.player1Id,
+        },
+      });
+      // console.log("ratingHistory : ", ratingHistory);
+      ratingHistory = ratingHistory?.dataValues?.ratingHistory;
+
+      if (ratingHistory.length === 10) {
+        ratingHistory.shift();
+      }
+      ratingHistory = [
+        ...ratingHistory,
+        { rating: player1RatingAfter, date: formattedDate() },
+      ];
+      console.log("ratingHistory : ", ratingHistory);
       await Player.update(
         {
           rating: player1RatingAfter,
+          ratingHistory,
         },
         {
           where: {
@@ -489,9 +524,29 @@ export const SocketHandler = (server) => {
         }
       );
 
+      ratingHistory = await Player.findOne({
+        attributes: ["ratingHistory"],
+        where: {
+          id: playedGame.player2Id,
+        },
+      });
+
+      // console.log("ratingHistory : ", ratingHistory);
+      ratingHistory = ratingHistory?.dataValues?.ratingHistory;
+
+      if (ratingHistory.length === 10) {
+        ratingHistory.shift();
+      }
+
+      ratingHistory = [
+        ...ratingHistory,
+        { rating: player2RatingAfter, date: formattedDate() },
+      ];
+
       await Player.update(
         {
           rating: player2RatingAfter,
+          ratingHistory,
         },
         {
           where: {
@@ -499,7 +554,8 @@ export const SocketHandler = (server) => {
           },
         }
       );
-      socket.emit("itsDraw", {
+
+      io.to(roomName).emit("itsDraw", {
         player1RatingBefore,
         player1RatingAfter,
         player2RatingBefore,

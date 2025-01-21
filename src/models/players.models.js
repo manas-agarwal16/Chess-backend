@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import { formattedDate } from "../utils/formattedDate.js";
 
 export default (sequelize) => {
   const Player = sequelize.define(
@@ -35,6 +36,15 @@ export default (sequelize) => {
       rating: {
         type: DataTypes.INTEGER,
         DefaultValue: 1200,
+      },
+      ratingHistory: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        DefaultValue: [
+          {
+            rating: 1200,
+            date: formattedDate(),
+          },
+        ],
       },
     },
     {

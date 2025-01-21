@@ -10,7 +10,7 @@ export default (sequelize) => {
         type: DataTypes.INTEGER,
       },
       OTP: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
       },
       handle: {
         //player handle

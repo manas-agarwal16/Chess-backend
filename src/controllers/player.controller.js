@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { encrptPassword } from "../utils/encryptPassword.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/tokens.js";
 import bcrypt from "bcrypt";
+import { formattedDate } from "../utils/formattedDate.js";
 import jwt from "jsonwebtoken";
 
 //clear
@@ -83,6 +84,8 @@ const register = asyncHandler(async (req, res) => {
 //clear
 const verifyOTP = asyncHandler(async (req, res) => {
   let { email, otp } = req.body;
+  console.log("otp type", typeof otp);
+
   email = email.toLowerCase();
   console.log("verifyOTP email", email, "otp", otp);
 
@@ -111,15 +114,18 @@ const verifyOTP = asyncHandler(async (req, res) => {
       .json(new ApiResponse(409, "", "Please provide email and otp"));
   }
 
-  otp = Number(otp);
+  // otp = Number(otp);
 
-  const otpDb = await OTP.findOne({
+  let otpDb = await OTP.findOne({
     where: {
       email: {
         [Op.iLike]: email,
       },
     },
   });
+  console.log("otpDb", otpDb);
+  otpDb = otpDb?.dataValues;
+
   if (!otpDb) {
     return res
       .status(404)
@@ -132,9 +138,9 @@ const verifyOTP = asyncHandler(async (req, res) => {
       );
   }
 
-  // console.log("database OTP", otpDb.OTP);
+  console.log("database OTP", otpDb.OTP);
 
-  if (otpDb.OTP !== otp) {
+  if (otpDb.OTP != otp) {
     return res.status(401).json(new ApiResponse(401, "", "Invalid OTP!!!"));
   }
 
@@ -147,6 +153,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     password: encrptedPassword,
     avatar: otpDb.avatar,
     rating: 1200,
+    ratingHistory: [{ rating: 1200, date: formattedDate() }],
   });
 
   // console.log("player", player);
@@ -578,7 +585,7 @@ const playerProfile = asyncHandler(async (req, res) => {
 
     matchesData = matchesData.map((match) => match.dataValues);
 
-    console.log("matchesData: ", matchesData);
+    // console.log("matchesData: ", matchesData);
     let matches = await Promise.all(
       matchesData.map(async (match) => {
         let opponentHandle = await Player.findOne({
@@ -634,6 +641,7 @@ const playerProfile = asyncHandler(async (req, res) => {
           email: playerData.email,
           handle: playerData.handle,
           avatar: playerData.avatar,
+          ratingHistory: playerData.ratingHistory,
           matches: matches,
           registered: playerData.createdAt,
         },
@@ -709,5 +717,5 @@ export {
   getCurrentPlayer,
   fetchPlayerRating,
   playerProfile,
-  viewMatch
+  viewMatch,
 };
