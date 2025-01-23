@@ -10,6 +10,7 @@ import {
   fetchPlayerRating,
   playerProfile,
   viewMatch,
+  updateAvatar,
 } from "../controllers/player.controller.js";
 
 import { verifyJWT } from "../utils/verifyJWT.js";
@@ -26,5 +27,6 @@ router.route("/logout").get(verifyJWT, logout);
 router.route("/fetch-player-rating/:id").get(fetchPlayerRating);
 router.route("/profile/:handle").get(playerProfile);
 router.route("/view-match/:matchId/:playerId").get(viewMatch);
+router.route("/update-avatar").put(verifyJWT, updateAvatar);
 
 export default router;

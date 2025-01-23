@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 import { Game, OTP, Player, sequelize } from "../models/index.js";
 import { generateOTP, sendOTPThroughEmail } from "../utils/otp_generator.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
@@ -548,7 +548,29 @@ const playerProfile = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, "", "Player not found"));
     }
     playerData = playerData?.dataValues;
-    // console.log("playerData", playerData);
+
+    let totalMatches, wins, losses, draws;
+    if (page == 1) {
+      totalMatches = await Game.count({
+        where: {
+          [Op.or]: [{ player1Id: playerData.id }, { player2Id: playerData.id }],
+        },
+      });
+      console.log("totalMatches", totalMatches);
+      wins = await Game.count({
+        where: {
+          winnerId: playerData.id,
+        },
+      });
+
+      losses = await Game.count({
+        where: {
+          losserId: playerData.id,
+        },
+      });
+
+      draws = totalMatches - (wins + losses);
+    }
 
     let matchesData = await Game.findAll({
       attributes: [
@@ -632,6 +654,28 @@ const playerProfile = asyncHandler(async (req, res) => {
       })
     );
 
+    if (page == 1) {
+      return res.status(201).json(
+        new ApiResponse(
+          201,
+          {
+            id: playerData.id,
+            rating: playerData.rating,
+            totalMatches,
+            wins,
+            losses,
+            draws,
+            email: playerData.email,
+            handle: playerData.handle,
+            avatar: playerData.avatar,
+            ratingHistory: playerData.ratingHistory,
+            matches: matches,
+            registered: playerData.createdAt,
+          },
+          "Player profile"
+        )
+      );
+    }
     return res.status(201).json(
       new ApiResponse(
         201,
@@ -707,7 +751,15 @@ const viewMatch = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, match, "Match fetched successfully"));
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  const { avatarURL, id } = req.body;
+  console.log("avatarURL", avatarURL);
+  await Player.update({ avatar: avatarURL }, { where: { id } });
+  return res.status(201).json(new ApiResponse(201, "", "Avatar updated successfully"));
+});
+
 export {
+  updateAvatar,
   register,
   verifyOTP,
   resendOTP,
