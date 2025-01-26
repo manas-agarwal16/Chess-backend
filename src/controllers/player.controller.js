@@ -28,6 +28,8 @@ const register = asyncHandler(async (req, res) => {
       [Op.or]: [{ email }, { handle }],
     },
   });
+  console.log('exists: ', exists);
+  
   exists = exists?.dataValues;
 
   // console.log("exists", exists);

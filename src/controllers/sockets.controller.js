@@ -175,6 +175,9 @@ export const SocketHandler = (server) => {
       let waitingFriend = await Friend.findOne({
         where: {
           code: code,
+          [Op.not]: {
+            playerId,
+          },
         },
       });
 
