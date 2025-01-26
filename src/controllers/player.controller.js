@@ -28,8 +28,8 @@ const register = asyncHandler(async (req, res) => {
       [Op.or]: [{ email }, { handle }],
     },
   });
-  console.log('exists: ', exists);
-  
+  console.log("exists: ", exists);
+
   exists = exists?.dataValues;
 
   // console.log("exists", exists);
@@ -182,11 +182,17 @@ const verifyOTP = asyncHandler(async (req, res) => {
 //clear
 const resendOTP = asyncHandler(async (req, res) => {
   const { email } = req.params;
-  // console.log("email : ", email);
+  console.log("email : ", email);
 
-  const player = await OTP.findOne({ where: { [Op.iLike]: email } });
+  const player = await OTP.findOne({
+    where: { email: { [Op.iLike]: email } },
+  });
+
+  console.log("resend otp");
 
   if (!player) {
+    console.log("Email not found");
+
     return res
       .status(404)
       .json(new ApiResponse(404, "", "Email not found. Try registering again"));
@@ -196,7 +202,7 @@ const resendOTP = asyncHandler(async (req, res) => {
 
   const updateOTP = await OTP.update(
     { OTP: otp },
-    { where: { [Op.iLike]: email } }
+    { where: { email: { [Op.iLike]: email } } }
   );
   // console.log("updateOTP", updateOTP);
 
@@ -757,7 +763,9 @@ const updateAvatar = asyncHandler(async (req, res) => {
   const { avatarURL, id } = req.body;
   console.log("avatarURL", avatarURL);
   await Player.update({ avatar: avatarURL }, { where: { id } });
-  return res.status(201).json(new ApiResponse(201, "", "Avatar updated successfully"));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "", "Avatar updated successfully"));
 });
 
 export {
