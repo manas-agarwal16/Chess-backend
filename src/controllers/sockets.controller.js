@@ -8,13 +8,12 @@ import { wFactor, lFactor } from "../utils/Factors.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
-const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
-
 export const SocketHandler = (server) => {
+  const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
-        // console.log("origin", origin);
+        console.log("origin", origin);
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
           callback(null, true); // Allow the request
         } else {
@@ -184,8 +183,8 @@ export const SocketHandler = (server) => {
       let waitingFriend = await Friend.findOne({
         where: {
           code: code,
-          [Op.not]: {
-            playerId,
+          playerId: {
+            [Op.not]: playerId, // Ensure playerId is not equal to the given playerId
           },
         },
       });

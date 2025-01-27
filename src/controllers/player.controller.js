@@ -238,7 +238,7 @@ const resendOTP = asyncHandler(async (req, res) => {
 });
 
 //clear
-const login = asyncHandler(async (req, res) => {
+const login = asyncHandler(async (req, res) => {  
   let { emailOrHandle, password } = req.body;
 
   emailOrHandle = emailOrHandle.toLowerCase();
