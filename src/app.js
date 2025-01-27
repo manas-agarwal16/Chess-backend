@@ -11,6 +11,8 @@ const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
 app.use(
   cors({
     origin: function (origin, callback) {
+      // console.log("origin", origin);
+      
       if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
         callback(null, true); // Allow the request
       } else {
