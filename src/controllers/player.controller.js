@@ -1,8 +1,8 @@
 import { Op, where } from "sequelize";
 import { Game, OTP, Player, sequelize } from "../models/index.js";
 import { generateOTP, sendOTPThroughEmail } from "../utils/otp_generator.js";
-import { asyncHandler } from "../utils/AsyncHandler.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 import { encrptPassword } from "../utils/encryptPassword.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/tokens.js";
 import bcrypt from "bcrypt";
