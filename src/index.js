@@ -9,8 +9,8 @@ import "./utils/nodeCron.js";
     const res = await connectDB()
       .then(() => {
         console.log("DB Connected , index.js");
-        server.listen(process.env.PORT, () => {
-          console.log(`Server is running on http://localhost:${process.env.PORT}`);
+        server.listen(process.env.PORT || 4000, () => {
+          console.log(`Server is running on http://localhost:${process.env.PORT || 4000}`);
         });
       })
       .catch((error) => {
