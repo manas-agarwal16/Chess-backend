@@ -4,22 +4,33 @@ import config from "../config/config.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
-  {
-    host: config.host,
-    port: config.port || 5432,
-    dialect: config.dialect,
+// const sequelize = new Sequelize(
+//   config.database,
+//   config.username,
+//   config.password,
+//   {
+//     host: config.host,
+//     port: config.port || 5432,
+//     dialect: config.dialect,
+//     ssl: {
+//       require: true,
+//       rejectUnauthorized: false,
+//     },
+//     logging: false,
+//     // logging: console.log, // Disable SQL logging in production
+//   }
+// );
+
+const sequelize = new Sequelize(process.env.RENDER_DATABASE_URL, {
+  dialect: "postgres",
+  dialectOptions: {
     ssl: {
-      require: true,
+      require: true, // Use SSL for Render
       rejectUnauthorized: false,
     },
-    logging: false,
-    // logging: console.log, // Disable SQL logging in production
-  }
-);
+  },
+  logging: false,
+});
 
 import PlayerModel from "./players.models.js";
 import RatingModel from "./ratings.models.js";
@@ -72,7 +83,10 @@ Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 
 //Player to Friend one to one
 Player.hasOne(Friend, { foreignKey: "playerId", as: "WaitingFriend" });
-Friend.belongsTo(Player, { foreignKey: "playerId", as: "WaitingFriendDetails" });
+Friend.belongsTo(Player, {
+  foreignKey: "playerId",
+  as: "WaitingFriendDetails",
+});
 
 const syncDB = async () => {
   try {

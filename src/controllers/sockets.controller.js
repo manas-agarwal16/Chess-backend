@@ -11,7 +11,7 @@ import { wFactor, lFactor } from "../utils/Factors.js";
 export const SocketHandler = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:5174",
+      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -603,6 +603,25 @@ export const SocketHandler = (server) => {
           playerId: playerId,
         },
       });
+    });
+
+    //WebRTC
+    //sending the offer to the other player
+    socket.on("offer", (data) => {
+      console.log("offer : ", data);
+      socket.to(data.roomName).emit("offer", data.offer);
+    });
+
+    //response to the offer
+    socket.on("answer", (data) => {
+      console.log("answer : ", data);
+      socket.to(data.roomName).emit("answer", data);
+    });
+
+    // Handle ICE candidates
+    socket.on("ice-candidate", (data) => {
+      console.log("ice-candidate : ", data);
+      socket.to(data.roomName).emit("ice-candidate", data);
     });
   });
 

@@ -6,11 +6,14 @@ import "./utils/nodeCron.js";
 
 (async () => {
   try {
+    const port = process.env.PORT || 5000; // Fallback to 5000 for local testing
+    console.log(`Attempting to start server on port: ${port}`);
+
     const res = await connectDB()
       .then(() => {
         console.log("DB Connected , index.js");
-        server.listen(process.env.PORT || 4000, () => {
-          console.log(`Server is running on http://localhost:${process.env.PORT || 4000}`);
+        server.listen(port, () => {
+          console.log(`Server is running on http://localhost:${port}`);
         });
       })
       .catch((error) => {

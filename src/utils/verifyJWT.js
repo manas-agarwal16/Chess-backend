@@ -23,13 +23,12 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     // Decode the token
     const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_KEY);
     // console.log("decodedToken : ", decodedToken);
-    
+
     if (!decodedToken) {
       return res
         .status(401)
         .json(new ApiResponse(401, "", "Error decoding access token"));
     }
-
 
     // Fetch player
     // const player = await player.findOne({ id: decodedToken.id }).select(
@@ -39,7 +38,7 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     const player = await Player.findOne({
       attrbutes: { exclude: ["password", "refreshToken"] },
       where: {
-        id: decodedToken.id
+        id: decodedToken.id,
       },
     });
 
@@ -68,4 +67,4 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
   }
 });
 
-export {verifyJWT};
+export { verifyJWT };
