@@ -1,7 +1,7 @@
-import { ApiResponse } from "./ApiResponse.js";
+import { ApiResponse } from "./apiResponse.js";
 import jwt from "jsonwebtoken";
 import { Player } from "../models/index.js";
-import { asyncHandler } from "./AsyncHandler.js";
+import { asyncHandler } from "./asyncHandler.js";
 
 //clear
 const verifyJWT = asyncHandler(async (req, res, next) => {
