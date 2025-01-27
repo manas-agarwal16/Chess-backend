@@ -8,10 +8,19 @@ import { wFactor, lFactor } from "../utils/Factors.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
+const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
+
 export const SocketHandler = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+      origin: function (origin, callback) {
+        // console.log("origin", origin);
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+          callback(null, true); // Allow the request
+        } else {
+          callback(new Error("Not allowed by CORS")); // Block the request
+        }
+      },
       methods: ["GET", "POST"],
       credentials: true,
     },
