@@ -13,7 +13,7 @@ export const SocketHandler = (server) => {
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
-        console.log("origin", origin);
+        // console.log("origin", origin);
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
           callback(null, true); // Allow the request
         } else {
@@ -138,24 +138,26 @@ export const SocketHandler = (server) => {
 
     //create room for friend
     socket.on("createRoom", async (playerId) => {
+      console.log("createRoom : ", playerId);
+
       if (!playerId) {
         socket.emit("error", "playerId is required");
         return;
       }
-      setTimeout(async () => {
-        const exists = await Friend.findOne({
+      // setTimeout(async () => {
+      const exists = await Friend.findOne({
+        where: {
+          playerId: playerId,
+        },
+      });
+      if (exists) {
+        await Friend.destroy({
           where: {
             playerId: playerId,
           },
         });
-        if (exists) {
-          await Friend.destroy({
-            where: {
-              playerId: playerId,
-            },
-          });
-        }
-      }, 400);
+      }
+      // }, 400);
 
       let waitingFriend = await Friend.create({
         playerId: playerId,
@@ -167,7 +169,7 @@ export const SocketHandler = (server) => {
       waitingFriend = waitingFriend?.dataValues;
 
       socket.join(`room#${socket.id}`);
-      console.log("waitingFriend : ", waitingFriend);
+      console.log("waitingFriend hehe : ", waitingFriend);
       socket.emit("askToEnterCode", waitingFriend.code);
     });
 
@@ -601,6 +603,8 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("gameOverClearWaitings", async (playerId) => {
+      console.log("gameOverClearWaitings : ", playerId);
+
       await Waiting.destroy({
         where: {
           playerId: playerId,
