@@ -619,21 +619,25 @@ export const SocketHandler = (server) => {
 
     //WebRTC
     //sending the offer to the other player
-    socket.on("offer", (data) => {
-      console.log("offer : ", data);
-      socket.to(data.roomName).emit("offer", data.offer);
+    socket.on("offer", ({ roomName, offer }) => {
+      console.log("in offer");
+
+      console.log({ offer });
+      socket.broadcast.to(roomName).emit("offer", { offer });
     });
 
     //response to the offer
-    socket.on("answer", (data) => {
-      console.log("answer : ", data);
-      socket.to(data.roomName).emit("answer", data);
+    socket.on("answer", ({ roomName, answer }) => {
+      console.log("in answer");
+
+      console.log({ roomName, answer });
+      socket.broadcast.to(roomName).emit("answer", { roomName, answer });
     });
 
     // Handle ICE candidates
     socket.on("ice-candidate", (data) => {
       console.log("ice-candidate : ", data);
-      socket.to(data.roomName).emit("ice-candidate", data);
+      socket.broadcast.to(data.roomName).emit("ice-candidate", data);
     });
   });
 
