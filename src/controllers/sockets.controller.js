@@ -639,6 +639,17 @@ export const SocketHandler = (server) => {
       console.log("ice-candidate : ", data);
       socket.broadcast.to(data.roomName).emit("ice-candidate", data);
     });
+
+    //mute opponent audio
+    socket.on("muteAudio", ({ roomName }) => {
+      console.log("muteAudio : ", roomName);
+      socket.broadcast.to(roomName).emit("muteAudio");
+    });
+
+    socket.on("unmuteAudio", ({ roomName }) => {
+      console.log("unmuteAudio : ", roomName);
+      socket.broadcast.to(roomName).emit("unmuteAudio");
+    });
   });
 
   return io;
