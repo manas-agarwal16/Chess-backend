@@ -297,6 +297,10 @@ export const SocketHandler = (server) => {
 
     //new chess position
     socket.on("newChessPosition", async (data) => {
+      io.to(data.roomName).emit("makeMove", data.position);
+
+      console.log('here dear cutie');
+      
       let pastHistory = await Game.findOne({
         where: {
           roomName: data.roomName,
@@ -322,12 +326,10 @@ export const SocketHandler = (server) => {
         }
       );
 
-      // console.log("updatedBoard : ", updatedBoard);
-
-      io.to(data.roomName).emit("makeMove", data.position);
+      console.log("updatedBoard : ", updatedBoard);
     });
 
-    //checkmate and rating calculations. if won raiting + wFactor * (opp / you) if loose raiting - lFactor * (you / opp);
+    //checkmate and rating calculations. if won rating + wFactor * (opp / you) if loose raiting - lFactor * (you / opp);
     socket.on("checkmate", async ({ roomName, winnerId, losserId }) => {
       console.log("checkmate : ", roomName, winnerId, losserId);
 
