@@ -300,7 +300,7 @@ export const SocketHandler = (server) => {
       io.to(data.roomName).emit("makeMove", data.position);
 
       // console.log('here dear cutie');
-      
+
       let pastHistory = await Game.findOne({
         where: {
           roomName: data.roomName,
@@ -624,8 +624,9 @@ export const SocketHandler = (server) => {
     socket.on("offer", ({ roomName, offer }) => {
       console.log("in offer");
 
-      console.log({ offer });
-      socket.broadcast.to(roomName).emit("offer", { offer });
+      console.log({ roomName, offer });
+      // console.log);
+      socket.broadcast.to(roomName).emit("offer", { offer, roomName });
     });
 
     //response to the offer
@@ -637,9 +638,10 @@ export const SocketHandler = (server) => {
     });
 
     // Handle ICE candidates
-    socket.on("ice-candidate", (data) => {
-      console.log("ice-candidate : ", data);
-      socket.broadcast.to(data.roomName).emit("ice-candidate", data);
+    socket.on("ice-candidate", ({ roomName, candidate }) => {
+      console.log("in ice-candidate");
+      console.log({ roomName, candidate });
+      socket.broadcast.to(roomName).emit("ice-candidate", { candidate });
     });
 
     //mute opponent audio
