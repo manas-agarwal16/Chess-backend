@@ -2,7 +2,7 @@
 
 ## About Chess Master
 **Chess Master** is a platform built for chess enthusiasts who want to improve their skills and connect with others while playing. It’s not just about winning—it’s about growing together.  
-
+**Website Link**: &nbsp;[https://chessmaster-manas.vercel.app/](https://chessmaster-manas.vercel.app/)
 **Frontend Repository**: &nbsp;[https://github.com/manas-agarwal16/Chess-frontend](https://github.com/manas-agarwal16/Chess-frontend)
 
 ## Purpose
