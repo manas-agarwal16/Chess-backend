@@ -30,7 +30,7 @@ export const SocketHandler = (server) => {
   io.on("connection", (socket) => {
     //play with stranger
     socket.on("playWithStranger", async (playerId) => {
-      console.log("playerId socketId : ", playerId, socket.id);
+      // console.log("playerId socketId : ", playerId, socket.id);
       if (!playerId) {
         return socket.emit("error", "Player not found!!! invalid player id");
       }
@@ -125,12 +125,12 @@ export const SocketHandler = (server) => {
             playerId,
             roomName: roomName,
           });
-          console.log("already in waitings");
+          // console.log("already in waitings");
         } catch (error) {
           console.log("already in waitings");
         }
 
-        console.log("waiting for a player");
+        // console.log("waiting for a player");
 
         socket.emit("WaitingForAPlayer", roomName);
       }
@@ -138,7 +138,7 @@ export const SocketHandler = (server) => {
 
     //create room for friend
     socket.on("createRoom", async (playerId) => {
-      console.log("createRoom : ", playerId);
+      // console.log("createRoom : ", playerId);
 
       if (!playerId) {
         socket.emit("error", "playerId is required");
@@ -169,7 +169,7 @@ export const SocketHandler = (server) => {
       waitingFriend = waitingFriend?.dataValues;
 
       socket.join(`room#${socket.id}`);
-      console.log("waitingFriend hehe : ", waitingFriend);
+      // console.log("waitingFriend hehe : ", waitingFriend);
       socket.emit("askToEnterCode", waitingFriend.code);
     });
 
@@ -180,7 +180,7 @@ export const SocketHandler = (server) => {
         return;
       }
       code = Number(code);
-      console.log("code : ", code);
+      // console.log("code : ", code);
 
       let waitingFriend = await Friend.findOne({
         where: {
@@ -191,7 +191,7 @@ export const SocketHandler = (server) => {
         },
       });
 
-      console.log("waitingFriend : ", waitingFriend);
+      // console.log("waitingFriend : ", waitingFriend);
 
       waitingFriend = waitingFriend?.dataValues;
 
@@ -239,7 +239,7 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("updateTodoId", ({ id, roomName }) => {
-      console.log("updateTodoId : ", id);
+      // console.log("updateTodoId : ", id);
       io.to(roomName).emit("updateTodoIdFromBackend", id);
     });
 
@@ -299,7 +299,7 @@ export const SocketHandler = (server) => {
     socket.on("newChessPosition", async (data) => {
       io.to(data.roomName).emit("makeMove", data.position);
 
-      // console.log('here dear cutie');
+      console.log('here dear cutie');
 
       let pastHistory = await Game.findOne({
         where: {
@@ -331,7 +331,7 @@ export const SocketHandler = (server) => {
 
     //checkmate and rating calculations. if won rating + wFactor * (opp / you) if loose raiting - lFactor * (you / opp);
     socket.on("checkmate", async ({ roomName, winnerId, losserId }) => {
-      console.log("checkmate : ", roomName, winnerId, losserId);
+      // console.log("checkmate : ", roomName, winnerId, losserId);
 
       let playedGame = await Game.findOne({
         where: {
@@ -411,7 +411,7 @@ export const SocketHandler = (server) => {
         ...ratingHistory,
         { rating: player1RatingAfter, date: formattedDate() },
       ];
-      console.log("ratingHistory : ", ratingHistory);
+      // console.log("ratingHistory : ", ratingHistory);
       await Player.update(
         {
           rating: player1RatingAfter,
@@ -581,15 +581,15 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("resignGame", async ({ roomName, playerId }) => {
-      console.log("resign Game");
-      console.log("roomName playerId : ", roomName, playerId);
+      // console.log("resign Game");
+      // console.log("roomName playerId : ", roomName, playerId);
 
       io.to(roomName).emit("resignedGame", { roomName, playerId });
     });
 
     //user disconnected
     socket.on("userDisconnected", async ({ playerId, roomName }) => {
-      console.log("userDisconnected : ", playerId);
+      // console.log("userDisconnected : ", playerId);
 
       await Waiting.destroy({
         where: {
@@ -605,7 +605,7 @@ export const SocketHandler = (server) => {
     });
 
     socket.on("gameOverClearWaitings", async (playerId) => {
-      console.log("gameOverClearWaitings : ", playerId);
+      // console.log("gameOverClearWaitings : ", playerId);
 
       await Waiting.destroy({
         where: {
@@ -622,36 +622,36 @@ export const SocketHandler = (server) => {
     //WebRTC
     //sending the offer to the other player
     socket.on("offer", ({ roomName, offer }) => {
-      console.log("in offer");
+      // console.log("in offer");
 
-      console.log({ roomName, offer });
+      // console.log({ roomName, offer });
       // console.log);
       socket.broadcast.to(roomName).emit("offer", { offer, roomName });
     });
 
     //response to the offer
     socket.on("answer", ({ roomName, answer }) => {
-      console.log("in answer");
+      // console.log("in answer");
 
-      console.log({ roomName, answer });
+      // console.log({ roomName, answer });
       socket.broadcast.to(roomName).emit("answer", { roomName, answer });
     });
 
     // Handle ICE candidates
     socket.on("ice-candidate", ({ roomName, candidate }) => {
-      console.log("in ice-candidate");
-      console.log({ roomName, candidate });
+      // console.log("in ice-candidate");
+      // console.log({ roomName, candidate });
       socket.broadcast.to(roomName).emit("ice-candidate", { candidate });
     });
 
     //mute opponent audio
     socket.on("muteAudio", ({ roomName }) => {
-      console.log("muteAudio : ", roomName);
+      // console.log("muteAudio : ", roomName);
       socket.broadcast.to(roomName).emit("muteAudio");
     });
 
     socket.on("unmuteAudio", ({ roomName }) => {
-      console.log("unmuteAudio : ", roomName);
+      // console.log("unmuteAudio : ", roomName);
       socket.broadcast.to(roomName).emit("unmuteAudio");
     });
   });
