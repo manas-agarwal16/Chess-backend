@@ -97,7 +97,7 @@ To run the application on your localhost, you need to have node installed on you
    ```sh
    cd Chess-backend
    ```
-3. Install NPM packages  
+3. Install NPM packages and set up your environment variables
    </br>
    ```sh
    npm install
