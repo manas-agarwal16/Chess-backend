@@ -280,7 +280,7 @@ const login = asyncHandler(async (req, res) => {
       sameSite: "None",
       httpOnly: true,
       secure: true,
-      maxAge: 60 * 24 * 60 * 1000, //1d
+      maxAge: 24 * 60 * 1000, //1d
     })
     .cookie("refreshToken", refreshToken, {
       sameSite: "None",

@@ -2,17 +2,17 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
-import {SocketHandler} from "./controllers/sockets.controller.js";
+import { SocketHandler } from "./controllers/sockets.controller.js";
 
 const app = express();
 
-const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
+const allowedOrigins = ["https://chessmaster-manas.vercel.app"];
 
 app.use(
   cors({
     origin: function (origin, callback) {
       // console.log("origin", origin);
-      
+
       if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
         callback(null, true); // Allow the request
       } else {
@@ -22,7 +22,7 @@ app.use(
     credentials: true,
   })
 );
-
+ 
 app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -39,5 +39,4 @@ app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
 
-
-export { app , server , io };
+export { app, server, io };

@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { Waiting, Player, Game, Friend } from "../models/index.js";
 import { Chess } from "chess.js";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
 import { uniqueCode } from "../utils/uniqueCode.js";
 import { formattedDate } from "../utils/formattedDate.js";
 import { wFactor, lFactor } from "../utils/Factors.js";
@@ -9,7 +9,7 @@ import { wFactor, lFactor } from "../utils/Factors.js";
 //game.fen() -> for current state of the chess board , return a string,
 
 export const SocketHandler = (server) => {
-  const allowedOrigins = process.env.CORS_ORIGIN.split(",") || "*";
+  const allowedOrigins = ["https://chessmaster-manas.vercel.app"];
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
@@ -298,8 +298,6 @@ export const SocketHandler = (server) => {
     //new chess position
     socket.on("newChessPosition", async (data) => {
       io.to(data.roomName).emit("makeMove", data.position);
-
-      console.log('here dear cutie');
 
       let pastHistory = await Game.findOne({
         where: {

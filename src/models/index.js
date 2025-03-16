@@ -4,23 +4,6 @@ import config from "../config/config.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-// const sequelize = new Sequelize(
-//   config.database,
-//   config.username,
-//   config.password,
-//   {
-//     host: config.host,
-//     port: config.port || 5432,
-//     dialect: config.dialect,
-//     ssl: {
-//       require: true,
-//       rejectUnauthorized: false,
-//     },
-//     logging: false,
-//     // logging: console.log, // Disable SQL logging in production
-//   }
-// );
-
 const sequelize = new Sequelize(process.env.RENDER_DATABASE_URL, {
   dialect: "postgres",
   dialectOptions: {
@@ -88,13 +71,13 @@ Friend.belongsTo(Player, {
   as: "WaitingFriendDetails",
 });
 
-const syncDB = async () => {
-  try {
-    await sequelize.sync({ alter: true });
-    console.log("All models were synchronized successfully.");
-  } catch (error) {
-    console.log("Error syncing models", error);
-  }
-};
+  const syncDB = async () => {
+    try {
+      await sequelize.sync({ alter: true });
+      console.log("All models were synchronized successfully.");
+    } catch (error) {
+      console.log("Error syncing models", error);
+    }
+  };
 
 export { sequelize, Player, Game, Waiting, Rating, Audio, OTP, Friend, syncDB };
