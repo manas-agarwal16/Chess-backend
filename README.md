@@ -2,13 +2,23 @@
 
 ## About Chess Master
 **Chess Master** is a platform built for chess enthusiasts who want to improve their skills and connect with others while playing. It’s not just about winning—it’s about growing together.  
-</br>
+## Video demo
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://www.youtube.com/watch?v=isLbUbTW1G8">
+        <img src="./src/assets/chessMaster_youtube_thumbnail.png" width="900" height="400" alt="register">
+      </a>
+    </td>
+  </tr>
+</table>
+
 **Website Link**: &nbsp;[https://chessmaster-manas.vercel.app/](https://chessmaster-manas.vercel.app/)
 </br>
 </br>
 **Frontend Repository**: &nbsp;[https://github.com/manas-agarwal16/Chess-frontend](https://github.com/manas-agarwal16/Chess-frontend)
 
-## Purpose
+## Why Chess Master?
 Chess is more than just a game; it’s a journey of mastering patterns, strategies, and problem-solving. But what truly accelerates improvement is sharing ideas, discussing moves, and learning from one another. That’s where Chess Master comes in. We let you communicate live with your opponent during games, so you can exchange thoughts, share strategies, and support each other. Whether you're playing a friendly match or inviting your trainer for a game, Chess Master brings you closer to your goals as a team.
 
 ## Tech Stack
@@ -75,7 +85,7 @@ Chess is more than just a game; it’s a journey of mastering patterns, strategi
 
 ## Installation
 
-To run the application, you need to have node installed on your machine. If you don't have it installed, you can follow the instructions [here](https://nodejs.org/en/download) to install it.
+To run the application on your localhost, you need to have node installed on your machine. If you don't have it installed, you can follow the instructions [here](https://nodejs.org/en/download) to install it.
 
 1. Clone the repository  
    </br>
@@ -87,7 +97,7 @@ To run the application, you need to have node installed on your machine. If you 
    ```sh
    cd Chess-backend
    ```
-3. Install NPM packages  
+3. Install NPM packages and set up your environment variables
    </br>
    ```sh
    npm install
