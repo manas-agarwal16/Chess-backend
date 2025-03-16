@@ -9,7 +9,11 @@ import { wFactor, lFactor } from "../utils/Factors.js";
 //game.fen() -> for current state of the chess board , return a string,
 
 export const SocketHandler = (server) => {
-  const allowedOrigins = ["https://chessmaster-manas.vercel.app"];
+  const allowedOrigins = [
+    "https://chessmaster-manas.vercel.app",
+    "http://localhost:5173",
+  ];
+
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
