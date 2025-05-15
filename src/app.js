@@ -5,7 +5,7 @@ import http from "http";
 import { SocketHandler } from "./controllers/sockets.controller.js";
 
 const app = express();
- 
+
 const allowedOrigins = ["https://chessmaster-manas.vercel.app", 'http://localhost:5173'];
 
 app.use(
