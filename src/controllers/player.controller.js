@@ -9,7 +9,7 @@ import bcrypt from "bcrypt";
 import { formattedDate } from "../utils/formattedDate.js";
 import jwt from "jsonwebtoken";
 
-//clear
+//clear 
 const register = asyncHandler(async (req, res) => {
   let { handle, email, password, avatarURL } = req.body;
   console.log("register avatarURL", avatarURL);
