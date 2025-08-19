@@ -36,7 +36,7 @@ router.get(
         secure: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .redirect("http://localhost:5173"); // frontend route
+      .redirect("https://chessmaster-manas.vercel.app"); // frontend route
   }
 );
 
