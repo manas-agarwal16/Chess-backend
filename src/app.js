@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
+import passport from "./config/passport.js";
+import googleAuthRoutes from "./routes/googleAuth.routes.js";
 import { SocketHandler } from "./controllers/sockets.controller.js";
 
 const app = express();
@@ -22,7 +24,7 @@ app.use(
     credentials: true,
   })
 );
- 
+app.use(passport.initialize());
 app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -34,6 +36,7 @@ const io = SocketHandler(server);
 
 import playerRouter from "./routes/player.routes.js";
 app.use("/players", playerRouter);
+app.use("/auth", googleAuthRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");

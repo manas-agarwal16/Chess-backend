@@ -29,4 +29,6 @@ router.route("/profile/:handle").get(playerProfile);
 router.route("/view-match/:matchId/:playerId").get(viewMatch);
 router.route("/update-avatar").put(verifyJWT, updateAvatar);
 
+
+
 export default router;

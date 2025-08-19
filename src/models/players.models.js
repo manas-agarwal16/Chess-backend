@@ -23,7 +23,7 @@ export default (sequelize) => {
       },
       password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true, // for OAuth users
       },
       avatar: {
         type: DataTypes.STRING,
@@ -46,6 +46,11 @@ export default (sequelize) => {
           },
         ],
       },
+      googleId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+      },
     },
     {
       tableName: "players",
@@ -53,9 +58,3 @@ export default (sequelize) => {
   );
   return Player;
 };
-
-// or
-// export default (sequelize) => {
-//   class User extends Model {}
-//   User.init({});
-// };
