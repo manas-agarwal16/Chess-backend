@@ -4,7 +4,7 @@ import { Chess } from "chess.js";
 import { Op } from "sequelize";
 import { uniqueCode } from "../utils/uniqueCode.js";
 import { formattedDate } from "../utils/formattedDate.js";
-import { wFactor, lFactor } from "../utils/Factors.js";
+import { calculateElo } from "../utils/EloRating.js";
 
 //game.fen() -> for current state of the chess board , return a string,
 
@@ -331,10 +331,8 @@ export const SocketHandler = (server) => {
       // console.log("updatedBoard : ", updatedBoard);
     });
 
-    //checkmate and rating calculations. if won rating + wFactor * (opp / you) if loose raiting - lFactor * (you / opp);
+    //checkmate and rating calculations.
     socket.on("checkmate", async ({ roomName, winnerId, losserId }) => {
-      // console.log("checkmate : ", roomName, winnerId, losserId);
-
       let playedGame = await Game.findOne({
         where: {
           roomName: roomName,
@@ -355,32 +353,30 @@ export const SocketHandler = (server) => {
       let player1RatingAfter, player2RatingAfter;
 
       if (winnerId === playedGame.player1Id) {
-        player1RatingAfter =
-          player1RatingBefore +
-          wFactor(player1RatingBefore) *
-            (player2RatingBefore / player1RatingBefore);
+        player1RatingAfter = calculateElo(
+          player1RatingBefore,
+          player2RatingBefore,
+          1
+        );
 
-        player2RatingAfter =
-          player2RatingBefore -
-          lFactor(player2RatingBefore) *
-            (player2RatingBefore / player1RatingBefore);
+        player2RatingAfter = calculateElo(
+          player2RatingBefore,
+          player1RatingBefore,
+          0
+        );
       } else {
-        player2RatingAfter =
-          player2RatingBefore +
-          wFactor(player2RatingBefore) *
-            (player1RatingBefore / player2RatingBefore);
+        player2RatingAfter = calculateElo(
+          player2RatingBefore,
+          player1RatingBefore,
+          1
+        );
 
-        player1RatingAfter =
-          player1RatingBefore -
-          lFactor(player1RatingBefore) *
-            (player1RatingBefore / player2RatingBefore);
+        player1RatingAfter = calculateElo(
+          player1RatingBefore,
+          player2RatingBefore,
+          0
+        );
       }
-
-      player1RatingAfter = Math.floor(player1RatingAfter);
-      player2RatingAfter = Math.floor(player2RatingAfter);
-
-      player1RatingAfter = Math.max(player1RatingAfter, 1200);
-      player2RatingAfter = Math.max(player2RatingAfter, 1200);
 
       await Game.update(
         {
