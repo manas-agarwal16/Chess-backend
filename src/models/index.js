@@ -19,7 +19,7 @@ import PlayerModel from "./players.models.js";
 import RatingModel from "./ratings.models.js";
 import WaitingsModels from "./waitings.models.js";
 import GameModel from "./games.models.js";
-import AudioModel from "./audios.models.js";
+// import AudioModel from "./audios.models.js";
 import OTPModel from "./otps.models.js";
 import FriendsModel from "./friends.models.js";
 
@@ -28,7 +28,7 @@ const Player = PlayerModel(sequelize);
 const Game = GameModel(sequelize);
 const Waiting = WaitingsModels(sequelize);
 const Rating = RatingModel(sequelize);
-const Audio = AudioModel(sequelize);
+// const Audio = AudioModel(sequelize);
 const OTP = OTPModel(sequelize);
 const Friend = FriendsModel(sequelize);
 //Associations
@@ -55,14 +55,14 @@ Player.hasOne(Rating, { foreignKey: "playerId", as: "PlayerRating" });
 Rating.belongsTo(Player, { foreignKey: "playerId", as: "PlayerDetails" });
 
 //Player to Audio one to one
-Player.hasOne(Audio, { foreignKey: "player1Id", as: "AudioAsPlayer1" });
-Player.hasOne(Audio, { foreignKey: "player2Id", as: "AudioAsPlayer2" });
-Audio.belongsTo(Player, { foreignKey: "player1Id", as: "Player1Details" });
-Audio.belongsTo(Player, { foreignKey: "player2Id", as: "Player2Details" });
+// Player.hasOne(Audio, { foreignKey: "player1Id", as: "AudioAsPlayer1" });
+// Player.hasOne(Audio, { foreignKey: "player2Id", as: "AudioAsPlayer2" });
+// Audio.belongsTo(Player, { foreignKey: "player1Id", as: "Player1Details" });
+// Audio.belongsTo(Player, { foreignKey: "player2Id", as: "Player2Details" });
 
 //Game to Audio one to one
-Game.hasOne(Audio, { foreignKey: "gameId", as: "GameAudio" });
-Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
+// Game.hasOne(Audio, { foreignKey: "gameId", as: "GameAudio" });
+// Audio.belongsTo(Game, { foreignKey: "gameId", as: "GameDetails" });
 
 //Player to Friend one to one
 Player.hasOne(Friend, { foreignKey: "playerId", as: "WaitingFriend" });
@@ -80,4 +80,4 @@ Friend.belongsTo(Player, {
     }
   };
 
-export { sequelize, Player, Game, Waiting, Rating, Audio, OTP, Friend, syncDB };
+export { sequelize, Player, Game, Waiting, Rating, OTP, Friend, syncDB };

@@ -2,7 +2,6 @@ import { DataTypes } from "sequelize";
 
 //K-factor for rating 1200 => 100, 1400 => 50, 1600 => 25, 1800 => 10 1900 => 7 1950 => 3
 
-
 export default (sequelize) => {
   const Game = sequelize.define(
     "Game",
@@ -84,6 +83,13 @@ export default (sequelize) => {
     },
     {
       tableName: "games",
+      indexes: [
+        { fields: ["player1Id"] },
+        { fields: ["player2Id"] },
+        { fields: ["winnerId"] },
+        { fields: ["losserId"] },
+        { fields: ["player1Id", "player2Id"] },
+      ],
     }
   );
   return Game;
