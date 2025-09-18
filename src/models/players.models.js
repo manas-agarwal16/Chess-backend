@@ -9,7 +9,7 @@ export default (sequelize) => {
         primaryKey: true,
         autoIncrement: true,
         type: DataTypes.INTEGER,
-      },
+      }, 
       handle: {
         type: DataTypes.STRING,
         allowNull: false,
