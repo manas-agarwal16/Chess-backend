@@ -11,7 +11,6 @@ export default (sequelize) => {
         type: DataTypes.INTEGER,
       },
       handle: {
-        //player handle
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
