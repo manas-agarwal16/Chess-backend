@@ -717,6 +717,7 @@ const viewMatch = asyncHandler(async (req, res) => {
 
   const match = await Game.findOne({
     attributes: [
+      
       "history",
       [
         sequelize.literal(`
